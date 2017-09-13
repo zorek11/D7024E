@@ -15,7 +15,7 @@ type Kademlia struct {
 	rt *RoutingTable
 }
 
-func NewKademlia(self Contact, rt *RoutingTable) (kademlia *Kademlia) {
+func NewKademlia(self Contact) (kademlia *Kademlia) {
 	kademlia = new(Kademlia)
 	kademlia.rt = NewRoutingTable(self)
 	return
