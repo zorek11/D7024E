@@ -1,5 +1,13 @@
 package d7024e
 
+import (
+	"flag"
+	"fmt"
+	"os"
+	"strconv"
+	"strings"
+)
+
 const count = 20
 const alpha = 3
 
@@ -17,11 +25,9 @@ func (kademlia *Kademlia) LookupContact(target *Contact) Contact {
 	contacts := kademlia.rt.FindClosestContacts(target.ID, count)
 	if target.ID != contacts[0].ID {
 		for i := 0; i < alpha; i++ {
-			//go LookupContact()
+			s := strings.Split(contacts[i].Address, ":")
+			go Listen(s[0], IntConverter(s[1]))
 		}
-	} else {
-		return contacts[0]
-	}
 	return contacts[0]
 }
 
@@ -31,4 +37,16 @@ func (kademlia *Kademlia) LookupData(hash string) {
 
 func (kademlia *Kademlia) Store(data []byte) {
 	// TODO
+}
+
+func IntConverter(port string) int {
+	flag.Parse()
+	// string to int
+	i, err := strconv.Atoi(port)
+	if err != nil {
+		// handle error
+		fmt.Println(err)
+		os.Exit(2)
+	}
+	return i
 }
