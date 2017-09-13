@@ -28,6 +28,7 @@ func (kademlia *Kademlia) LookupContact(target *Contact) Contact {
 			s := strings.Split(contacts[i].Address, ":")
 			go Listen(s[0], IntConverter(s[1]))
 		}
+	}
 	return contacts[0]
 }
 
