@@ -23,11 +23,16 @@ func NewKademlia(self Contact) (kademlia *Kademlia) {
 
 func (kademlia *Kademlia) LookupContact(target *Contact) Contact {
 	contacts := kademlia.rt.FindClosestContacts(target.ID, count)
-	if target.ID != contacts[0].ID {
-		for i := 0; i < alpha; i++ {
-			s := strings.Split(contacts[i].Address, ":")
-			go Listen(s[0], IntConverter(s[1]))
+
+	for i := 0; i < len(contacts); i++ {
+		if target.ID == contacts[i].ID {
+			return contacts[i]
 		}
+	}
+
+	for i := 0; i < alpha; i++ {
+		s := strings.Split(contacts[i].Address, ":")
+		go Listen(s[0], IntConverter(s[1]))
 	}
 	return contacts[0]
 }

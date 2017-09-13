@@ -16,8 +16,8 @@ func TestRoutingTable(t *testing.T) {
 	contact1 := NewContact(NewKademliaID("2111111400000000000000000000000000000000"), "localhost:8002")
 	kademlia.rt.AddContact(contact1)
 
-	contacts := kademlia.rt.FindClosestContacts(NewKademliaID("1111111500000000000000000000000000000000"), 20)
-	for i := range contacts {
-		fmt.Println(contacts[i].String())
-	}
+	pocon := &contact1
+
+	contacts := kademlia.LookupContact(pocon)
+	fmt.Println(contacts)
 }
