@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"strconv"
-	"strings"
 )
 
 const count = 20
@@ -25,8 +24,8 @@ func (kademlia *Kademlia) LookupContact(target *Contact) Contact {
 	contacts := kademlia.rt.FindClosestContacts(target.ID, count)
 	if target.ID != contacts[0].ID {
 		for i := 0; i < alpha; i++ {
-			s := strings.Split(contacts[i].Address, ":")
-			go Listen(s[0], IntConverter(s[1]))
+			//s := strings.Split(contacts[i].Address, ":")
+			go Listen(*target)
 		}
 	}
 	return contacts[0]
