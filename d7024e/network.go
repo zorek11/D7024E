@@ -3,8 +3,7 @@ package d7024e
 import (
 	"fmt"
 	"net"
-	"strconv"
-	//"D7024E-Kademlia/protobuf"
+
 	"github.com/golang/protobuf/proto"
 )
 
@@ -12,8 +11,14 @@ type Network struct {
 	me Contact
 }
 
-func Listen(ip string, port int) {
-	Addr, err1 := net.ResolveUDPAddr("udp", ip+":"+strconv.Itoa(port))
+func NewNetwork(me Contact) *Network {
+	net := &Network{}
+	net.me = me
+	return net
+}
+
+func Listen(me Contact) {
+	Addr, err1 := net.ResolveUDPAddr("udp", me.Address)
 	Conn, err2 := net.ListenUDP("udp", Addr)
 	if (err1 != nil) || (err2 != nil) {
 		fmt.Println("Connection Error: ", err1, "\n", err2)
@@ -24,7 +29,7 @@ func Listen(ip string, port int) {
 	buf := make([]byte, 1024)
 	for {
 		_, _, err := Conn.ReadFromUDP(buf)
-		go handleMessage(buf, ip+":"+strconv.Itoa(port))
+		go handleMessage(buf, me)
 		if err != nil {
 			fmt.Println("Read Error: ", err)
 		}
@@ -32,7 +37,7 @@ func Listen(ip string, port int) {
 }
 
 func (network *Network) SendPingMessage(contact *Contact) {
-	message := buildMessage("ping", contact.ID.String(), contact.Address)
+	message := buildMessage("ping", network.me.ID.String(), network.me.Address)
 	data, err := proto.Marshal(message)
 	if err != nil {
 		fmt.Println("Marshal Error: ", err)

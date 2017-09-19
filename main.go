@@ -2,6 +2,7 @@ package main
 
 import (
 	kademlia "D7024E-Kademlia/d7024e"
+	"fmt"
 	"sync"
 	//"fmt"
 )
@@ -12,11 +13,17 @@ func main() {
 	mutex.Lock()
 	defer mutex.Unlock()
 
-	contact := kademlia.NewContact(kademlia.NewKademliaID("FFFFFFFF00000000000000000000000000000000"), "127.0.0.1:8001")
-	net := kademlia.Network{this}
+	contact := kademlia.NewContact(kademlia.NewKademliaID("FFFFFFFF00000000000000000000000000000000"),
+		"127.0.0.1:8000")
+	me := kademlia.NewContact(kademlia.NewKademliaID("FFFFFFFF11111111111111111111111111111111"),
+		"localhost:8001")
+	//rt := kademlia.NewRoutingTable(me)
+	net := kademlia.NewNetwork(me)
 	go net.SendPingMessage(&contact)
 
-	kademlia.Listen("127.0.0.1", 8002)
+	fmt.Println(me)
+	kademlia.Listen(me)
+
 	/*
 		rt := kademlia.NewRoutingTable(kademlia.NewContact(kademlia.NewKademliaID("FFFFFFFF00000000000000000000000000000000"), "localhost:8000"))
 		for i := 1; i < 10; i++ {
