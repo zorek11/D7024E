@@ -2,7 +2,6 @@ package main
 
 import (
 	kademlia "D7024E-Kademlia/d7024e"
-	"fmt"
 	"sync"
 	//"fmt"
 )
@@ -21,11 +20,13 @@ func main() {
 	rt := kademlia.NewRoutingTable(me)
 	rt.AddContact(contact)
 	net := kademlia.NewNetwork(me)
+	go kademlia.Listen(me)
+	go kademlia.Listen(contact)
 	go net.SendPingMessage(&contact)
 
-	fmt.Println(me)
-	kademlia.Listen(me)
+	for {
 
+	}
 	/*
 		rt := kademlia.NewRoutingTable(kademlia.NewContact(kademlia.NewKademliaID("FFFFFFFF00000000000000000000000000000000"), "localhost:8000"))
 		for i := 1; i < 10; i++ {
