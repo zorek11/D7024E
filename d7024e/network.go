@@ -23,13 +23,17 @@ func Listen(me Contact) {
 	if (err1 != nil) || (err2 != nil) {
 		fmt.Println("Connection Error: ", err1, "\n", err2)
 	}
-
 	//read connection
 	defer Conn.Close()
+
+	channel := make(chan []byte)
 	buf := make([]byte, 1024)
+	go handleMessage(channel, me)
+
 	for {
 		_, _, err := Conn.ReadFromUDP(buf)
-		go handleMessage(buf, me)
+		//fmt.Print("Connection recived: ", UDPaddr)
+		channel <- buf
 		if err != nil {
 			fmt.Println("Read Error: ", err)
 		}
