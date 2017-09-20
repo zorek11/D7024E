@@ -1,7 +1,6 @@
 package d7024e
 
 import (
-	"flag"
 	"fmt"
 	"os"
 	"strconv"
@@ -12,13 +11,16 @@ const count = 20
 const alpha = 3
 
 type Kademlia struct {
-	rt *RoutingTable
+	rt      *RoutingTable
+	network *Network
 }
 
 func NewKademlia(self Contact) (kademlia *Kademlia) {
 	kademlia = new(Kademlia)
 	kademlia.rt = NewRoutingTable(self)
-	return
+	kademlia.network = new(Network)
+	//s := strings.Split(self.Address, ":")
+	return kademlia
 }
 
 func (kademlia *Kademlia) LookupContact(target *Contact) Contact {
@@ -32,7 +34,8 @@ func (kademlia *Kademlia) LookupContact(target *Contact) Contact {
 
 	for i := 0; i < alpha; i++ {
 		s := strings.Split(contacts[i].Address, ":")
-		go Listen(s[0], IntConverter(s[1]))
+		fmt.Println(s)
+		//go Listen(s[0], IntConverter(s[1]))
 	}
 	return contacts[0]
 }
@@ -46,8 +49,6 @@ func (kademlia *Kademlia) Store(data []byte) {
 }
 
 func IntConverter(port string) int {
-	flag.Parse()
-	// string to int
 	i, err := strconv.Atoi(port)
 	if err != nil {
 		// handle error
