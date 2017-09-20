@@ -21,7 +21,8 @@ func buildMessage(lable string, id string, addr string) *protobuf.KademliaMessag
 
 }
 
-func handleMessage(data []byte, me Contact) {
+func handleMessage(channel chan []byte, me Contact) {
+	data := <-channel
 	message := &protobuf.KademliaMessage{}
 	err := proto.Unmarshal(data, message)
 	if err != nil {
@@ -30,25 +31,44 @@ func handleMessage(data []byte, me Contact) {
 	switch *message.Label {
 	case "ping":
 		fmt.Println("\n", message)
-		response := buildMessage("pingResponse", me.ID.String(), me.Address)
-		data, err := proto.Marshal(response)
-		if err != nil {
-			fmt.Println("Marshal Error: ", err)
-		}
-		Conn, err := net.Dial("udp", message.GetSenderAddr())
-		if err != nil {
-			fmt.Println("UDP-Error: ", err)
-		}
-		defer Conn.Close()
+		handlePing(message, me)
 
-		_, err = Conn.Write(data)
-		if err != nil {
-			fmt.Println("Write Error: ", err)
-		}
 	case "pingResponse":
 		fmt.Print("\n", message)
-		//TODO:
+
+	case "LookupContact":
+		fmt.Print("\n", message)
+
+	case "LookupData":
+		fmt.Print("\n", message)
+
+	case "StoreData":
+		fmt.Print("\n", message)
+
 	default:
+		fmt.Println("PANIC")
 
 	}
+}
+
+func handlePing(message *protobuf.KademliaMessage, me Contact) {
+	response := buildMessage("pingResponse", me.ID.String(), me.Address)
+	data, err := proto.Marshal(response)
+	if err != nil {
+		fmt.Println("Marshal Error: ", err)
+	}
+	Conn, err := net.Dial("udp", message.GetSenderAddr())
+	if err != nil {
+		fmt.Println("UDP-Error: ", err)
+	}
+	defer Conn.Close()
+
+	_, err = Conn.Write(data)
+	if err != nil {
+		fmt.Println("Write Error: ", err)
+	}
+}
+
+func handlePingResponse(message *protobuf.KademliaMessage, me Contact) {
+
 }

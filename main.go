@@ -13,11 +13,13 @@ func main() {
 	mutex.Lock()
 	defer mutex.Unlock()
 
-	contact := kademlia.NewContact(kademlia.NewKademliaID("FFFFFFFF00000000000000000000000000000000"),
-		"127.0.0.1:8000")
-	me := kademlia.NewContact(kademlia.NewKademliaID("FFFFFFFF11111111111111111111111111111111"),
-		"localhost:8001")
-	//rt := kademlia.NewRoutingTable(me)
+	contact := kademlia.NewContact(kademlia.NewKademliaID("FFFFFFFF11111111111111111111111111111111"),
+		"127.0.0.1:7777")
+
+	me := kademlia.NewContact(kademlia.NewKademliaID("FFFFFFFF00000000000000000000000000000000"),
+		"127.0.0.1:9999")
+	rt := kademlia.NewRoutingTable(me)
+	rt.AddContact(contact)
 	net := kademlia.NewNetwork(me)
 	go net.SendPingMessage(&contact)
 
