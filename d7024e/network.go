@@ -1,6 +1,7 @@
 package d7024e
 
 import (
+	"D7024E-Kademlia/protobuf"
 	"fmt"
 	"net"
 
@@ -8,13 +9,25 @@ import (
 )
 
 type Network struct {
-	me Contact
+	me       Contact
+	target   *Contact
+	response *Contact
+	kademlia *Kademlia
 }
 
-func NewNetwork(me Contact) *Network {
+func NewNetwork(me Contact, kad *Kademlia) *Network {
 	net := &Network{}
 	net.me = me
+	net.kademlia = kad
 	return net
+}
+
+func (network *Network) AddMessage(c *Contact) {
+	network.target = c
+}
+
+func (network *Network) AddResponse(c *Contact) {
+	network.response = c
 }
 
 func Listen(me Contact) {
@@ -55,7 +68,26 @@ func (network *Network) SendPingMessage(contact *Contact) {
 }
 
 func (network *Network) SendFindContactMessage(contact *Contact) {
-	// TODO
+	message := &protobuf.KademliaMessage{
+		Label:         proto.String("LookupContact"),
+		Senderid:      proto.String(network.me.ID.String()),
+		SenderAddr:    proto.String(network.me.Address),
+		LookupContact: proto.String(network.target.String()),
+	}
+	data, err := proto.Marshal(message)
+	if err != nil {
+		fmt.Println("Marshal Error: ", err)
+	}
+	Conn, err := net.Dial("udp", contact.Address)
+	if err != nil {
+		fmt.Println("UDP-Error: ", err)
+	}
+	defer Conn.Close()
+
+	_, err = Conn.Write(data)
+	if err != nil {
+		fmt.Println("Write Error: ", err)
+	}
 }
 
 func (network *Network) SendFindDataMessage(hash string) {
