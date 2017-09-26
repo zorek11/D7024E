@@ -8,7 +8,7 @@ import (
 type Contact struct {
 	ID       *KademliaID
 	Address  string
-	distance *KademliaID
+	Distance *KademliaID
 }
 
 func NewContact(id *KademliaID, address string) Contact {
@@ -16,11 +16,11 @@ func NewContact(id *KademliaID, address string) Contact {
 }
 
 func (contact *Contact) CalcDistance(target *KademliaID) {
-	contact.distance = contact.ID.CalcDistance(target)
+	contact.Distance = contact.ID.CalcDistance(target)
 }
 
 func (contact *Contact) Less(otherContact *Contact) bool {
-	return contact.distance.Less(otherContact.distance)
+	return contact.Distance.Less(otherContact.Distance)
 }
 
 func (contact *Contact) String() string {
