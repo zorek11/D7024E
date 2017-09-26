@@ -41,8 +41,8 @@ func Listen(me Contact) {
 
 	channel := make(chan []byte)
 	buf := make([]byte, 1024)
-	go handleMessage(channel, me)
 	for {
+		go handleMessage(channel, me)
 		_, _, err := Conn.ReadFromUDP(buf)
 		//fmt.Print("Connection recived: ", UDPaddr)
 		channel <- buf
