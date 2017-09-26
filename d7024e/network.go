@@ -4,6 +4,8 @@ import (
 	"D7024E-Kademlia/protobuf"
 	"fmt"
 	"net"
+	"crypto/sha1"
+	"io"
 
 	"github.com/golang/protobuf/proto"
 )
@@ -94,9 +96,41 @@ func (network *Network) SendFindContactMessage(contact *Contact) {
 }
 
 func (network *Network) SendFindDataMessage(hash string) {
-	// TODO
+		//TODO
+
 }
 
-func (network *Network) SendStoreMessage(data []byte) {
-	// TODO
+func (network *Network) SendStoreMessage(data string) {
+	hash := sha1.new()
+	io.WriteString(h, data)
+	key := h.Sum(nil)
+	//TODO: implement below if byte array and not string. For final solution.
+	//	data := []byte("This page intentionally left blank.")
+	//fmt.Printf("% x", sha1.Sum(data))
+
+	message := &protobuf.KademliaMessage{
+		Label:         proto.String("StoreData"),
+		Senderid:      proto.String(network.me.ID.String()),
+		SenderAddr:    proto.String(network.me.Address),
+		Key: proto.String(key),
+		Value: prot.String(data)
+	}
+	contacts := kademlia.rt.FindClosestContacts(network.me.ID, count)
+
+	for j, contact := range contacts {
+		data, err := proto.Marshal(message)
+		if err != nil {
+			fmt.Println("Marshal Error: ", err)
+		}
+		Conn, err := net.Dial("udp", contacts[j].Address)
+		if err != nil {
+			fmt.Println("UDP-Error: ", err)
+		}
+		defer Conn.Close()
+
+		_, err = Conn.Write(data)
+		if err != nil {
+			fmt.Println("Write Error: ", err)
+		}
+	}
 }

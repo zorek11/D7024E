@@ -11,11 +11,13 @@ const alpha = 3
 
 type Kademlia struct {
 	rt *RoutingTable
+	ht  map[KademliaID][]byte
 }
 
 func NewKademlia(self Contact) (kademlia *Kademlia) {
 	kademlia = new(Kademlia)
 	kademlia.rt = NewRoutingTable(self)
+	kademlia.ht = make(map[KademliaID][]byte)
 	//kademlia.network = new(Network)
 	//s := strings.Split(self.Address, ":")
 	return kademlia
@@ -68,8 +70,11 @@ func (kademlia *Kademlia) LookupData(hash string) {
 	// TODO
 }
 
-func (kademlia *Kademlia) Store(data []byte) {
+func (kademlia *Kademlia) Store(key string, value string) {
 	// TODO
+			k.hash[key] = value
+
+
 }
 
 func IntConverter(port string) int {

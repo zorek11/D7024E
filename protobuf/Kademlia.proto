@@ -6,6 +6,8 @@
 		required string senderid = 2;
 		required string senderAddr = 3;
 		optional string lookupContact = 4;
+		optional string key = 5;
+		optional string value = 6;
 	}
 
 //protoc --go_out=. Kademlia.proto
