@@ -24,6 +24,7 @@ type KademliaMessage struct {
 	Label            *string `protobuf:"bytes,1,req,name=label" json:"label,omitempty"`
 	Senderid         *string `protobuf:"bytes,2,req,name=senderid" json:"senderid,omitempty"`
 	SenderAddr       *string `protobuf:"bytes,3,req,name=senderAddr" json:"senderAddr,omitempty"`
+	LookupContact    *string `protobuf:"bytes,4,opt,name=lookupContact" json:"lookupContact,omitempty"`
 	XXX_unrecognized []byte  `json:"-"`
 }
 
@@ -48,6 +49,13 @@ func (m *KademliaMessage) GetSenderid() string {
 func (m *KademliaMessage) GetSenderAddr() string {
 	if m != nil && m.SenderAddr != nil {
 		return *m.SenderAddr
+	}
+	return ""
+}
+
+func (m *KademliaMessage) GetLookupContact() string {
+	if m != nil && m.LookupContact != nil {
+		return *m.LookupContact
 	}
 	return ""
 }
