@@ -32,6 +32,7 @@ func (network *Network) AddResponse(c *Contact) {
 
 func Listen(me Contact, network *Network) {
 	messagehandler := NewMessageHandler(network)
+
 	Addr, err1 := net.ResolveUDPAddr("udp", me.Address)
 	Conn, err2 := net.ListenUDP("udp", Addr)
 	if (err1 != nil) || (err2 != nil) {
