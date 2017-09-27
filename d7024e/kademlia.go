@@ -71,7 +71,6 @@ func (kademlia *Kademlia) LookupData(hash string) {
 }
 
 func (kademlia *Kademlia) Store(key string, value string) {
-	// TODO
 			kademlia.ht[key] = value
 
 
