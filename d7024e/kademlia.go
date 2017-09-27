@@ -37,7 +37,9 @@ func (kademlia *Kademlia) LookupContact(target *Contact) *Contact {
 		networks[i].AddMessage(target)
 		go networks[i].SendFindContactMessage(&contacts[i])
 	}
-	go Listen(kademlia.rt.me)
+
+	//go Listen(kademlia.rt.me)
+
 	fails := 0
 	stuck := 0
 	for k := 0; k <= alpha; k++ {

@@ -21,11 +21,11 @@ var _ = proto.Marshal
 var _ = math.Inf
 
 type KademliaMessage struct {
-	Label            *string `protobuf:"bytes,1,req,name=label" json:"label,omitempty"`
-	Senderid         *string `protobuf:"bytes,2,req,name=senderid" json:"senderid,omitempty"`
-	SenderAddr       *string `protobuf:"bytes,3,req,name=senderAddr" json:"senderAddr,omitempty"`
-	LookupContact    *string `protobuf:"bytes,4,opt,name=lookupContact" json:"lookupContact,omitempty"`
-	XXX_unrecognized []byte  `json:"-"`
+	Label            *string                        `protobuf:"bytes,1,req,name=label" json:"label,omitempty"`
+	Senderid         *string                        `protobuf:"bytes,2,req,name=senderid" json:"senderid,omitempty"`
+	SenderAddr       *string                        `protobuf:"bytes,3,req,name=senderAddr" json:"senderAddr,omitempty"`
+	Lookupcontact    *KademliaMessage_LookupContact `protobuf:"group,4,opt,name=LookupContact" json:"lookupcontact,omitempty"`
+	XXX_unrecognized []byte                         `json:"-"`
 }
 
 func (m *KademliaMessage) Reset()         { *m = KademliaMessage{} }
@@ -53,9 +53,41 @@ func (m *KademliaMessage) GetSenderAddr() string {
 	return ""
 }
 
-func (m *KademliaMessage) GetLookupContact() string {
-	if m != nil && m.LookupContact != nil {
-		return *m.LookupContact
+func (m *KademliaMessage) GetLookupcontact() *KademliaMessage_LookupContact {
+	if m != nil {
+		return m.Lookupcontact
+	}
+	return nil
+}
+
+type KademliaMessage_LookupContact struct {
+	ID               *string `protobuf:"bytes,5,req" json:"ID,omitempty"`
+	Address          *string `protobuf:"bytes,6,req" json:"Address,omitempty"`
+	Distance         *string `protobuf:"bytes,7,req" json:"Distance,omitempty"`
+	XXX_unrecognized []byte  `json:"-"`
+}
+
+func (m *KademliaMessage_LookupContact) Reset()         { *m = KademliaMessage_LookupContact{} }
+func (m *KademliaMessage_LookupContact) String() string { return proto.CompactTextString(m) }
+func (*KademliaMessage_LookupContact) ProtoMessage()    {}
+
+func (m *KademliaMessage_LookupContact) GetID() string {
+	if m != nil && m.ID != nil {
+		return *m.ID
+	}
+	return ""
+}
+
+func (m *KademliaMessage_LookupContact) GetAddress() string {
+	if m != nil && m.Address != nil {
+		return *m.Address
+	}
+	return ""
+}
+
+func (m *KademliaMessage_LookupContact) GetDistance() string {
+	if m != nil && m.Distance != nil {
+		return *m.Distance
 	}
 	return ""
 }

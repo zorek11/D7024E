@@ -1,11 +1,15 @@
-	syntax = "proto2";
-	package protobuf;
+syntax = "proto2";
+package protobuf;
 
-	message KademliaMessage {
-		required string label = 1;
-		required string senderid = 2;
-		required string senderAddr = 3;
-		optional string lookupContact = 4;
+message KademliaMessage {
+	required string label = 1;
+	required string senderid = 2;
+	required string senderAddr = 3;
+	optional group LookupContact = 4 {
+		required string ID = 5;
+		required string Address = 6;
+		required string Distance = 7;
 	}
+}
 
 //protoc --go_out=. Kademlia.proto
