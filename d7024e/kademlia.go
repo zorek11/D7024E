@@ -67,12 +67,12 @@ func (kademlia *Kademlia) LookupContact(target *Contact) *Contact {
 }
 
 func (kademlia *Kademlia) LookupData(hash string) {
-	// TODO
+			data := kademlia.ht[key]
 }
 
 func (kademlia *Kademlia) Store(key string, value string) {
 	// TODO
-			k.hash[key] = value
+			kademlia.ht[key] = value
 
 
 }
