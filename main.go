@@ -47,8 +47,8 @@ func main() {
 	go net.Listen(me)
 	go net.Listen(contact)
 	go net.Listen(contact2)
-	go kadc.LookupContact(&contact)
-	/*for i := 0; i < 5; i++ {
+	go kadc.LookupContact(&contact2)
+	/*for i := 0; i < 1; i++ {
 		go net.SendPingMessage(&contact)
 		go net.SendPingMessage(&contact3)
 	}

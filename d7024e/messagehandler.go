@@ -4,7 +4,6 @@ import (
 	"D7024E-Kademlia/protobuf"
 	"fmt"
 	"net"
-	"time"
 
 	"github.com/golang/protobuf/proto"
 )
@@ -47,7 +46,6 @@ func (this *MessageHandler) handleMessage(channel chan []byte, me Contact, netwo
 	}
 	response := (*protobuf.KademliaMessage)(nil)
 	send := false
-	pingpong := false
 	switch *message.Label {
 	case "ping":
 		fmt.Println("\n", message)
@@ -57,7 +55,6 @@ func (this *MessageHandler) handleMessage(channel chan []byte, me Contact, netwo
 	case "pong":
 		fmt.Print("\n", message)
 		response = buildMessage([]string{"pong", me.ID.String(), me.Address})
-		pingpong = true
 
 	case "LookupContact":
 		fmt.Print("\n", message)
@@ -65,6 +62,7 @@ func (this *MessageHandler) handleMessage(channel chan []byte, me Contact, netwo
 		//network.kademlia.LookupContact(&contact)
 		temp := network.kademlia.rt.FindClosestContacts(contact.ID, 20)
 		network.AddResponse(temp)
+	case "LookupContactResponse":
 
 	case "LookupData":
 		fmt.Print("\n", message)
@@ -92,14 +90,6 @@ func (this *MessageHandler) handleMessage(channel chan []byte, me Contact, netwo
 			fmt.Println("Write Error: ", err)
 		}
 		send = false
-	}
-	if message.GetLabel() == "ping" {
-		fmt.Println(time.Now())
-		time.After(time.Second * 3)
-		fmt.Println("Pung")
-		if !pingpong {
-			fmt.Println("Timeout: ", message.GetSenderAddr())
-		}
 	}
 
 }

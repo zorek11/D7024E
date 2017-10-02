@@ -28,6 +28,7 @@ func (network *Network) AddMessage(c *Contact) {
 
 func (network *Network) AddResponse(c []Contact) {
 	network.response = c
+	fmt.Println("\nResponse: ", c)
 }
 
 func (network *Network) Listen(me Contact) {
@@ -72,6 +73,8 @@ func (network *Network) SendPingMessage(contact *Contact) {
 	if err != nil {
 		fmt.Println("Write Error: ", err)
 	}
+	//time.Sleep(time.Second * 2)
+
 }
 
 func (network *Network) SendFindContactMessage(contact *Contact) {
@@ -80,9 +83,9 @@ func (network *Network) SendFindContactMessage(contact *Contact) {
 		Senderid:   proto.String(network.me.ID.String()),
 		SenderAddr: proto.String(network.me.Address),
 		Lookupcontact: &protobuf.KademliaMessage_LookupContact{
-			ID:       proto.String(contact.ID.String()),
-			Address:  proto.String(contact.Address),
-			Distance: proto.String(contact.Distance.String()),
+			ID:       proto.String(network.target.ID.String()),
+			Address:  proto.String(network.target.Address),
+			Distance: proto.String(network.target.Distance.String()),
 		},
 	}
 
