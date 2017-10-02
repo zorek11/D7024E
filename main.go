@@ -13,19 +13,27 @@ func main() {
 	mutex.Lock()
 	defer mutex.Unlock()
 
-	contact := kademlia.NewContact(kademlia.NewKademliaID("FFFFFFFF00000000000000000000000000000000"),
-		"127.0.0.1:8000")
-	me := kademlia.NewContact(kademlia.NewKademliaID("FFFFFFFF11111111111111111111111111111111"),
-		"localhost:8001")
-	//rt := kademlia.NewRoutingTable(me)
-	net := kademlia.NewNetwork(me)
-	go net.SendPingMessage(&contact)
+	contact := kademlia.NewContact(kademlia.NewKademliaID("FFFFFFFF11111111111111111111111111111111"),
+		"127.0.0.1:7777")
 
-	fmt.Println(me)
-	kademlia.Listen(me)
+	me := kademlia.NewContact(kademlia.NewKademliaID("FFFFFFFF00000000000000000000000000000000"),
+		"127.0.0.1:9999")
 
-	/*
-		rt := kademlia.NewRoutingTable(kademlia.NewContact(kademlia.NewKademliaID("FFFFFFFF00000000000000000000000000000000"), "localhost:8000"))
+	rt := kademlia.NewRoutingTable(me)
+	rt.AddContact(contact)
+	me.CalcDistance(contact.ID)
+	contact.CalcDistance(me.ID)
+	fmt.Println("main \n", &contact)
+	kad := kademlia.NewKademlia(me)
+	net := kademlia.NewNetwork(me, kad)
+	go kademlia.Listen(me, net)
+	go kademlia.Listen(contact, net)
+	go net.SendFindContactMessage(&contact)
+	/*for i := 0; i < 5; i++ {
+		go net.SendPingMessage(&contact)
+	}
+
+		//rt := kademlia.NewRoutingTable(kademlia.NewContact(kademlia.NewKademliaID("FFFFFFFF00000000000000000000000000000000"), "localhost:8000"))
 		for i := 1; i < 10; i++ {
 			rt.AddContact(kademlia.NewContact(kademlia.NewRandomKademliaID(), "localhost:800"+strconv.Itoa(i)))
 		}
@@ -34,4 +42,6 @@ func main() {
 			fmt.Println(contacts[i].String())
 		}
 	*/
+	for {
+	}
 }

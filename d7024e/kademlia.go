@@ -46,6 +46,7 @@ func (kademlia *Kademlia) LookupContact(target *Contact) {
 
 	for k := 0; k <= thisalpha; k++ {
 		if k == thisalpha {
+
 			k = 0
 		}
 		if networks[k].response != nil {
