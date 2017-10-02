@@ -68,18 +68,46 @@ func (kademlia *Kademlia) LookupContact(target *Contact) {
 }
 
 func (kademlia *Kademlia) LookupData(hash string) {
-
-	contacts := kademlia.rt.FindClosestContacts(NewKademliaID(hash), count)
-	go Listen(kademlia.rt.me)
-	networks := make([]*Network, len(contacts))
-	for j := 0; j < len(contacts); j++ {
-		networks[j] = NewNetwork(kademlia.rt.me, kademlia)
-		networks[j].AddMessage(&contacts[j])
-		go networks[j].SendFindDataMessage(hash)
+	contacts := kademlia.rt.FindClosestContacts(target.ID, count)
+	thisalpha := 0
+	if len(contacts) < alpha {
+		thisalpha = len(contacts)
+	} else {
+		thisalpha = alpha
 	}
-	for {
 
+	if contacts[0].ID == target.ID {
+		//return &contacts[0]
+		fmt.Println("Target found: " + target.String())
+		fmt.Println("With address: " + contacts[0].String())
+		return
 	}
+
+	networks := make([]*Network, thisalpha)
+
+	for i := 0; i < thisalpha; i++ {
+		networks[i] = NewNetwork(kademlia.rt.me, kademlia)
+		networks[i].AddMessage(target)
+		go networks[i].SendFindContactMessage(&contacts[i])
+	}
+
+	for k := 0; k <= thisalpha; k++ {
+		if k == thisalpha {
+			k = 0
+		}
+		if networks[k].response != nil {
+			if networks[k].response[0].ID == target.ID {
+				fmt.Println("Target found: " + target.String())
+				fmt.Println("With address: " + networks[k].response[0].String())
+				return
+				//return networks[k].response[0]
+			} else {
+				tempCon := networks[k].response[0]
+				networks[k] = NewNetwork(kademlia.rt.me, kademlia)
+				networks[k].AddMessage(target)
+				go networks[k].SendFindContactMessage(tempCon)
+			}
+		}
 }
 
 func (kademlia *Kademlia) Store(data []byte) {
