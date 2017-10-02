@@ -51,12 +51,19 @@ func (kademlia *Kademlia) LookupContact(target *Contact) {
 		networks[i].AddMessage(target)
 		go networks[i].SendFindContactMessage(&contacts[i])
 	}
+	fmt.Println("first contact: " + contacts[0].Address)
 
 	for k := 0; k <= thisalpha; k++ {
+
 		if k == thisalpha {
 
 			k = 0
 		}
+		if networks[k].GetTemp() != nil {
+			break
+		}
+		//fmt.Println(networks[k].GetTemp())
+		//fmt.Println(networks[k].response == nil)
 		if networks[k].response != nil {
 			if networks[k].response[0].ID == target.ID {
 				fmt.Println("Target found: " + target.String())
@@ -92,7 +99,7 @@ func (kademlia *Kademlia) LookupData(hash string) {
 		fmt.Println("With address: " + contacts[0].String())
 		return
 	}
-
+	fmt.Println("first contact: " + contacts[0].Address)
 	networks := make([]*Network, thisalpha)
 
 	for i := 0; i < thisalpha; i++ {
@@ -104,6 +111,9 @@ func (kademlia *Kademlia) LookupData(hash string) {
 	for k := 0; k <= thisalpha; k++ {
 		if k == thisalpha {
 			k = 0
+		}
+		if networks[k].GetTemp() != nil {
+			break
 		}
 		if networks[k].response != nil {
 			if networks[k].response[0].ID == target.ID {

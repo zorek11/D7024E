@@ -13,6 +13,7 @@ type Network struct {
 	target   *Contact
 	response []Contact
 	kademlia *Kademlia
+	temp     *Contact
 }
 
 func NewNetwork(me Contact, kad *Kademlia) *Network {
@@ -26,8 +27,19 @@ func (network *Network) AddMessage(c *Contact) {
 	network.target = c
 }
 
+func (network *Network) GetTemp() *Contact {
+	return network.temp
+}
+func (network *Network) GetKademlia() *Kademlia {
+	return network.kademlia
+}
+
 func (network *Network) AddResponse(c []Contact) {
 	network.response = c
+}
+
+func (network *Network) AddTempResponse(c *Contact) {
+	network.temp = c
 }
 
 func (network *Network) Listen(me Contact) {
@@ -44,10 +56,11 @@ func (network *Network) Listen(me Contact) {
 	buf := make([]byte, 1024)
 
 	for {
+
 		go messagehandler.handleMessage(channel, me, network)
-		_, _, err := Conn.ReadFromUDP(buf)
-		//fmt.Print("Connection recived: ", UDPaddr)
+		n, addr, err := Conn.ReadFromUDP(buf)
 		channel <- buf
+		fmt.Println("Connection recived: ", string(buf[0:n]), " \nfrom ", addr)
 
 		if err != nil {
 			fmt.Println("Read Error: ", err)
@@ -80,9 +93,8 @@ func (network *Network) SendFindContactMessage(contact *Contact) {
 		Senderid:   proto.String(network.me.ID.String()),
 		SenderAddr: proto.String(network.me.Address),
 		Lookupcontact: &protobuf.KademliaMessage_LookupContact{
-			ID:       proto.String(contact.ID.String()),
-			Address:  proto.String(contact.Address),
-			Distance: proto.String(contact.Distance.String()),
+			ID:      proto.String(network.target.ID.String()),
+			Address: proto.String(network.target.Address),
 		},
 	}
 
@@ -100,6 +112,8 @@ func (network *Network) SendFindContactMessage(contact *Contact) {
 	if err != nil {
 		fmt.Println("Write Error: ", err)
 	}
+	fmt.Println("I am in sendfindcontact")
+
 }
 
 func (network *Network) SendFindDataMessage(hash string) {

@@ -38,12 +38,24 @@ func buildMessage(input []string) *protobuf.KademliaMessage {
 	}
 }
 
+func parseContacts(input []string) *protobuf.KademliaMessage {
+	message := &protobuf.KademliaMessage{
+		Label:      proto.String("LookupContactResponse"),
+		Senderid:   proto.String(input[0]),
+		SenderAddr: proto.String(input[1]),
+	}
+	return message
+}
+
 func (this *MessageHandler) handleMessage(channel chan []byte, me Contact, network *Network) {
 	data := <-channel
 	message := &protobuf.KademliaMessage{}
 	err := proto.Unmarshal(data, message)
 	if err != nil {
-		//log.Fatal("unmarshaling error: ", err)
+		fmt.Println(err)
+	} else {
+		fmt.Println("\n not fatal error")
+
 	}
 	response := (*protobuf.KademliaMessage)(nil)
 	send := false
@@ -60,12 +72,21 @@ func (this *MessageHandler) handleMessage(channel chan []byte, me Contact, netwo
 		pingpong = true
 
 	case "LookupContact":
-		fmt.Print("\n", message)
+		fmt.Print("\n", message, "\n\n")
 		contact := buildContact(message.Lookupcontact)
 		//network.kademlia.LookupContact(&contact)
 		temp := network.kademlia.rt.FindClosestContacts(contact.ID, 20)
-		network.AddResponse(temp)
-
+		response = parseContacts([]string{temp[0].ID.String(), temp[0].Address})
+		send = true
+		fmt.Println(response.SenderAddr)
+	case "LookupContactResponse":
+		if message.Lookupcontact != nil {
+			fmt.Print("\n", message)
+			response := buildContact(message.Lookupcontact)
+			network.AddTempResponse(&response)
+		} else {
+			return
+		}
 	case "LookupData":
 		fmt.Print("\n", message)
 
@@ -81,13 +102,17 @@ func (this *MessageHandler) handleMessage(channel chan []byte, me Contact, netwo
 		if err != nil {
 			fmt.Println("Marshal Error: ", err)
 		}
-		Conn, err := net.Dial("udp", message.GetSenderAddr())
+
+		//LocalAddr, err := net.ResolveUDPAddr("udp", network.kademlia.GetRoutingtable().me.Address)
+		ServerAddr, err := net.ResolveUDPAddr("udp", message.GetSenderAddr())
+		Conn, err := net.ListenUDP("udp", ServerAddr)
 		if err != nil {
 			fmt.Println("UDP-Error: ", err)
 		}
 		defer Conn.Close()
-
-		_, err = Conn.Write(data)
+		fmt.Println("\n writing to UDP")
+		fmt.Println(data)
+		_, err = Conn.WriteToUDP(data, ServerAddr)
 		if err != nil {
 			fmt.Println("Write Error: ", err)
 		}
@@ -105,5 +130,5 @@ func (this *MessageHandler) handleMessage(channel chan []byte, me Contact, netwo
 }
 
 func buildContact(message *protobuf.KademliaMessage_LookupContact) Contact {
-	return Contact{NewKademliaID(*message.ID), *message.Address, NewKademliaID(*message.Distance)}
+	return NewContact(NewKademliaID(*message.ID), *message.Address)
 }

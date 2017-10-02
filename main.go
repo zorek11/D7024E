@@ -2,7 +2,6 @@ package main
 
 import (
 	kademlia "D7024E-Kademlia/d7024e"
-	"fmt"
 	"sync"
 	//"fmt"
 )
@@ -13,15 +12,15 @@ func main() {
 	mutex.Lock()
 	defer mutex.Unlock()
 
-	contact := kademlia.NewContact(kademlia.NewKademliaID("FFFFFFFF11111111111111111111111111111111"),
-		"127.0.0.1:7777")
-	contact2 := kademlia.NewContact(kademlia.NewKademliaID("FFFFFFFF11111111111111111111111111111112"),
-		"127.0.0.1:7778")
-	contact3 := kademlia.NewContact(kademlia.NewKademliaID("FFFFFFFF11111111111111111111111111111113"),
-		"127.0.0.1:7779")
+	contact := kademlia.NewContact(kademlia.NewKademliaID("FFFFFFFFFFF11111111111111111111111111111"),
+		"127.0.0.1:1991")
+	contact2 := kademlia.NewContact(kademlia.NewKademliaID("1FFFFFFF11111111111111111111111111111112"),
+		"127.0.0.1:1722")
+	contact3 := kademlia.NewContact(kademlia.NewKademliaID("1FFFFFFF11111111111111111111111111111113"),
+		"127.0.0.1:1723")
 
 	me := kademlia.NewContact(kademlia.NewKademliaID("FFFFFFFF00000000000000000000000000000000"),
-		"127.0.0.1:9999")
+		"127.0.0.1:9921")
 
 	//rt := kademlia.NewRoutingTable(me)
 	//rt.AddContact(contact)
@@ -30,24 +29,32 @@ func main() {
 	contact.CalcDistance(me.ID)
 	me.CalcDistance(contact2.ID)
 
-	kadc := kademlia.NewKademlia(contact)
-	kadc.AddRoutingtable(me)
-	kadc.AddRoutingtable(contact2)
-	kadc.AddRoutingtable(contact3)
-	contacts1 := kadc.GetRoutingtable().FindClosestContacts(contact.ID, 20)
-	for i := range contacts1 {
-		fmt.Println(contacts1[i].String())
-	}
+	kad1 := kademlia.NewKademlia(me)
+	net1 := kademlia.NewNetwork(me, kad1)
+	//kad1.AddRoutingtable(contact)
+	kad1.AddRoutingtable(contact3)
 
-	netc := kademlia.NewNetwork(contact, kadc)
-	netc.SendPingMessage(&contact)
+	kad2 := kademlia.NewKademlia(contact2)
+	net2 := kademlia.NewNetwork(contact2, kad2)
+	kad2.AddRoutingtable(me)
+	kad2.AddRoutingtable(contact3)
 
-	kad := kademlia.NewKademlia(me)
-	net := kademlia.NewNetwork(me, kad)
-	go net.Listen(me)
-	go net.Listen(contact)
-	go net.Listen(contact2)
-	go kadc.LookupContact(&contact)
+	kad3 := kademlia.NewKademlia(contact3)
+	net3 := kademlia.NewNetwork(contact3, kad3)
+	kad3.AddRoutingtable(me)
+	kad3.AddRoutingtable(contact2)
+	/*
+		contacts1 := kad1.GetRoutingtable().FindClosestContacts(contact.ID, 20)
+		for i := range contacts1 {
+			fmt.Println(contacts1[i].String())
+		}
+	*/
+	//netc.SendPingMessage(&contact)
+
+	//go net1.Listen(me)
+	go net2.Listen(contact2)
+	go net3.Listen(contact3)
+	go net1.GetKademlia().LookupContact(&contact2)
 	/*for i := 0; i < 5; i++ {
 		go net.SendPingMessage(&contact)
 		go net.SendPingMessage(&contact3)
