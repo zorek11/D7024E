@@ -1,4 +1,4 @@
-package d7024e
+package main
 
 import (
 	"fmt"
@@ -12,6 +12,14 @@ const alpha = 3
 type Kademlia struct {
 	rt    *RoutingTable
 	items []string
+}
+
+func (kademlia *Kademlia) AddRoutingtable(c Contact) {
+	kademlia.rt.AddContact(c)
+}
+
+func (kademlia *Kademlia) GetRoutingtable() *RoutingTable {
+	return kademlia.rt
 }
 
 func NewKademlia(self Contact) (kademlia *Kademlia) {
@@ -59,7 +67,7 @@ func (kademlia *Kademlia) LookupContact(target *Contact) {
 				tempCon := networks[k].response[0]
 				networks[k] = NewNetwork(kademlia.rt.me, kademlia)
 				networks[k].AddMessage(target)
-				go networks[k].SendFindContactMessage(tempCon)
+				go networks[k].SendFindContactMessage(&tempCon)
 			}
 		}
 
@@ -69,6 +77,7 @@ func (kademlia *Kademlia) LookupContact(target *Contact) {
 }
 
 func (kademlia *Kademlia) LookupData(hash string) {
+	target := NewContact(NewKademliaID(hash), "")
 	contacts := kademlia.rt.FindClosestContacts(target.ID, count)
 	thisalpha := 0
 	if len(contacts) < alpha {
@@ -88,7 +97,7 @@ func (kademlia *Kademlia) LookupData(hash string) {
 
 	for i := 0; i < thisalpha; i++ {
 		networks[i] = NewNetwork(kademlia.rt.me, kademlia)
-		networks[i].AddMessage(target)
+		networks[i].AddMessage(&target)
 		go networks[i].SendFindContactMessage(&contacts[i])
 	}
 
@@ -105,10 +114,11 @@ func (kademlia *Kademlia) LookupData(hash string) {
 			} else {
 				tempCon := networks[k].response[0]
 				networks[k] = NewNetwork(kademlia.rt.me, kademlia)
-				networks[k].AddMessage(target)
-				go networks[k].SendFindContactMessage(tempCon)
+				networks[k].AddMessage(&target)
+				go networks[k].SendFindContactMessage(&tempCon)
 			}
 		}
+	}
 }
 
 func (kademlia *Kademlia) Store(data []byte) {

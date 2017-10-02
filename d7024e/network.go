@@ -11,7 +11,7 @@ import (
 type Network struct {
 	me       Contact
 	target   *Contact
-	response *Contact
+	response []Contact
 	kademlia *Kademlia
 }
 
@@ -26,7 +26,7 @@ func (network *Network) AddMessage(c *Contact) {
 	network.target = c
 }
 
-func (network *Network) AddResponse(c *Contact) {
+func (network *Network) AddResponse(c []Contact) {
 	network.response = c
 }
 
