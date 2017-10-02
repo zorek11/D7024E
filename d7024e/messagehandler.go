@@ -105,7 +105,7 @@ func (this *MessageHandler) handleMessage(channel chan []byte, me Contact, netwo
 			fmt.Println("Marshal Error: ", err)
 		}
 
-		Conn, err := net.Dial("udp", network.kademlia.GetRoutingtable().me.Address)
+		Conn, err := net.Dial("udp", *message.SenderAddr)
 		if err != nil {
 			fmt.Println("UDP-Error: ", err)
 		}

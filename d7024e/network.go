@@ -48,7 +48,7 @@ func (network *Network) Listen(me Contact) {
 	Addr, err1 := net.ResolveUDPAddr("udp", me.Address)
 	Conn, err2 := net.ListenUDP("udp", Addr)
 	if (err1 != nil) || (err2 != nil) {
-		fmt.Println("Connection Error: ", err1, "\n", err2)
+		fmt.Println("Connection Error Listen: ", err1, "\n", err2)
 	}
 	//read connection
 	defer Conn.Close()
