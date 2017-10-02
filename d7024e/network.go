@@ -11,7 +11,7 @@ import (
 type Network struct {
 	me       Contact
 	target   *Contact
-	response *Contact
+	response []Contact
 	kademlia *Kademlia
 }
 
@@ -26,13 +26,12 @@ func (network *Network) AddMessage(c *Contact) {
 	network.target = c
 }
 
-func (network *Network) AddResponse(c *Contact) {
+func (network *Network) AddResponse(c []Contact) {
 	network.response = c
 }
 
-func Listen(me Contact, network *Network) {
+func (network *Network) Listen(me Contact) {
 	messagehandler := NewMessageHandler(network)
-
 	Addr, err1 := net.ResolveUDPAddr("udp", me.Address)
 	Conn, err2 := net.ListenUDP("udp", Addr)
 	if (err1 != nil) || (err2 != nil) {
@@ -45,7 +44,7 @@ func Listen(me Contact, network *Network) {
 	buf := make([]byte, 1024)
 
 	for {
-		go messagehandler.handleMessage(channel, me, *network)
+		go messagehandler.handleMessage(channel, me, network)
 		_, _, err := Conn.ReadFromUDP(buf)
 		//fmt.Print("Connection recived: ", UDPaddr)
 		channel <- buf

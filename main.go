@@ -15,24 +15,44 @@ func main() {
 
 	contact := kademlia.NewContact(kademlia.NewKademliaID("FFFFFFFF11111111111111111111111111111111"),
 		"127.0.0.1:7777")
+	contact2 := kademlia.NewContact(kademlia.NewKademliaID("FFFFFFFF11111111111111111111111111111112"),
+		"127.0.0.1:7778")
+	contact3 := kademlia.NewContact(kademlia.NewKademliaID("FFFFFFFF11111111111111111111111111111113"),
+		"127.0.0.1:7779")
 
 	me := kademlia.NewContact(kademlia.NewKademliaID("FFFFFFFF00000000000000000000000000000000"),
 		"127.0.0.1:9999")
 
-	rt := kademlia.NewRoutingTable(me)
-	rt.AddContact(contact)
+	//rt := kademlia.NewRoutingTable(me)
+	//rt.AddContact(contact)
+	//rt.AddContact(contact2)
 	me.CalcDistance(contact.ID)
 	contact.CalcDistance(me.ID)
-	fmt.Println("main \n", &contact)
-	kad := kademlia.NewKademlia(me)
-	net := kademlia.NewNetwork(me, kad)
-	go kademlia.Listen(me, net)
-	go kademlia.Listen(contact, net)
-	go net.SendFindContactMessage(&contact)
-	/*for i := 0; i < 5; i++ {
-		go net.SendPingMessage(&contact)
+	me.CalcDistance(contact2.ID)
+
+	kadc := kademlia.NewKademlia(contact)
+	kadc.AddRoutingtable(me)
+	kadc.AddRoutingtable(contact2)
+	kadc.AddRoutingtable(contact3)
+	contacts1 := kadc.GetRoutingtable().FindClosestContacts(contact.ID, 20)
+	for i := range contacts1 {
+		fmt.Println(contacts1[i].String())
 	}
 
+	netc := kademlia.NewNetwork(contact, kadc)
+	netc.SendPingMessage(&contact)
+
+	kad := kademlia.NewKademlia(me)
+	net := kademlia.NewNetwork(me, kad)
+	go net.Listen(me)
+	go net.Listen(contact)
+	go net.Listen(contact2)
+	go kadc.LookupContact(&contact)
+	/*for i := 0; i < 5; i++ {
+		go net.SendPingMessage(&contact)
+		go net.SendPingMessage(&contact3)
+	}
+	/*
 		//rt := kademlia.NewRoutingTable(kademlia.NewContact(kademlia.NewKademliaID("FFFFFFFF00000000000000000000000000000000"), "localhost:8000"))
 		for i := 1; i < 10; i++ {
 			rt.AddContact(kademlia.NewContact(kademlia.NewRandomKademliaID(), "localhost:800"+strconv.Itoa(i)))
