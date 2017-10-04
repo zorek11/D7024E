@@ -6,10 +6,11 @@ message KademliaMessage {
 	required string senderid = 2;
 	required string senderAddr = 3;
 	optional group LookupContact = 4 {
-		required string ID = 5;
-		required string Address = 6;
-		optional string Distance = 7;
+		required string id = 5;
+		required string address = 6;
+		optional string distance = 7;
 	}
+	optional bytes data = 8;
 }
 
 //protoc --go_out=. Kademlia.proto

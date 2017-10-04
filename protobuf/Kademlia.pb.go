@@ -25,6 +25,7 @@ type KademliaMessage struct {
 	Senderid         *string                        `protobuf:"bytes,2,req,name=senderid" json:"senderid,omitempty"`
 	SenderAddr       *string                        `protobuf:"bytes,3,req,name=senderAddr" json:"senderAddr,omitempty"`
 	Lookupcontact    *KademliaMessage_LookupContact `protobuf:"group,4,opt,name=LookupContact" json:"lookupcontact,omitempty"`
+	Data             []byte                         `protobuf:"bytes,8,opt,name=data" json:"data,omitempty"`
 	XXX_unrecognized []byte                         `json:"-"`
 }
 
@@ -60,10 +61,17 @@ func (m *KademliaMessage) GetLookupcontact() *KademliaMessage_LookupContact {
 	return nil
 }
 
+func (m *KademliaMessage) GetData() []byte {
+	if m != nil {
+		return m.Data
+	}
+	return nil
+}
+
 type KademliaMessage_LookupContact struct {
-	ID               *string `protobuf:"bytes,5,req" json:"ID,omitempty"`
-	Address          *string `protobuf:"bytes,6,req" json:"Address,omitempty"`
-	Distance         *string `protobuf:"bytes,7,opt" json:"Distance,omitempty"`
+	Id               *string `protobuf:"bytes,5,req,name=id" json:"id,omitempty"`
+	Address          *string `protobuf:"bytes,6,req,name=address" json:"address,omitempty"`
+	Distance         *string `protobuf:"bytes,7,opt,name=distance" json:"distance,omitempty"`
 	XXX_unrecognized []byte  `json:"-"`
 }
 
@@ -71,9 +79,9 @@ func (m *KademliaMessage_LookupContact) Reset()         { *m = KademliaMessage_L
 func (m *KademliaMessage_LookupContact) String() string { return proto.CompactTextString(m) }
 func (*KademliaMessage_LookupContact) ProtoMessage()    {}
 
-func (m *KademliaMessage_LookupContact) GetID() string {
-	if m != nil && m.ID != nil {
-		return *m.ID
+func (m *KademliaMessage_LookupContact) GetId() string {
+	if m != nil && m.Id != nil {
+		return *m.Id
 	}
 	return ""
 }

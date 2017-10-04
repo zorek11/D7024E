@@ -96,7 +96,7 @@ func (network *Network) SendFindContactMessage(contact *Contact) {
 		Senderid:   proto.String(network.me.ID.String()),
 		SenderAddr: proto.String(network.me.Address),
 		Lookupcontact: &protobuf.KademliaMessage_LookupContact{
-			ID:      proto.String(network.target.ID.String()),
+			Id:      proto.String(network.target.ID.String()),
 			Address: proto.String(network.target.Address),
 		},
 	}
