@@ -20,7 +20,7 @@ func main() {
 		"127.0.0.1:1723")
 
 	me := kademlia.NewContact(kademlia.NewKademliaID("FFFFFFFF00000000000000000000000000000000"),
-		"127.0.0.1:9921")
+		"127.0.0.1:9999")
 
 	//rt := kademlia.NewRoutingTable(me)
 	//rt.AddContact(contact)
@@ -51,13 +51,14 @@ func main() {
 	*/
 	//netc.SendPingMessage(&contact)
 
-	//go net1.Listen(me)
+	go net1.Listen(me)
 	go net2.Listen(contact2)
 	go net3.Listen(contact3)
+	// go net1.SendPingMessage(&contact2)
 	go net1.GetKademlia().LookupContact(&contact2)
 	/*for i := 0; i < 5; i++ {
-		go net.SendPingMessage(&contact)
-		go net.SendPingMessage(&contact3)
+		go net1.SendPingMessage(&contact2)
+		//go net.SendPingMessage(&contact3)
 	}
 	/*
 		//rt := kademlia.NewRoutingTable(kademlia.NewContact(kademlia.NewKademliaID("FFFFFFFF00000000000000000000000000000000"), "localhost:8000"))

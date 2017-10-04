@@ -36,6 +36,7 @@ func (network *Network) GetKademlia() *Kademlia {
 
 func (network *Network) AddResponse(c []Contact) {
 	network.response = c
+	fmt.Println("\nResponse: ", c)
 }
 
 func (network *Network) GetResponse() []Contact {
@@ -50,7 +51,7 @@ func (network *Network) Listen(me Contact) {
 	Addr, err1 := net.ResolveUDPAddr("udp", me.Address)
 	Conn, err2 := net.ListenUDP("udp", Addr)
 	if (err1 != nil) || (err2 != nil) {
-		fmt.Println("Connection Error: ", err1, "\n", err2)
+		fmt.Println("Connection Error Listen: ", err1, "\n", err2)
 	}
 	//read connection
 	defer Conn.Close()
@@ -61,9 +62,9 @@ func (network *Network) Listen(me Contact) {
 	for {
 
 		go messagehandler.handleMessage(channel, me, network)
-		n, addr, err := Conn.ReadFromUDP(buf)
-		channel <- buf
-		fmt.Println("Connection recived: ", string(buf[0:n]), " \nfrom ", addr)
+		n, _, err := Conn.ReadFromUDP(buf)
+		channel <- buf[0:n]
+		//fmt.Println("Connection recived: ", string(buf[0:n]), " \nfrom ", addr)
 
 		if err != nil {
 			fmt.Println("Read Error: ", err)
@@ -88,6 +89,8 @@ func (network *Network) SendPingMessage(contact *Contact) {
 	if err != nil {
 		fmt.Println("Write Error: ", err)
 	}
+	//time.Sleep(time.Second * 2)
+
 }
 
 func (network *Network) SendFindContactMessage(contact *Contact) {
@@ -96,7 +99,7 @@ func (network *Network) SendFindContactMessage(contact *Contact) {
 		Senderid:   proto.String(network.me.ID.String()),
 		SenderAddr: proto.String(network.me.Address),
 		Lookupcontact: &protobuf.KademliaMessage_LookupContact{
-			ID:      proto.String(network.target.ID.String()),
+			Id:      proto.String(network.target.ID.String()),
 			Address: proto.String(network.target.Address),
 		},
 	}
@@ -115,7 +118,6 @@ func (network *Network) SendFindContactMessage(contact *Contact) {
 	if err != nil {
 		fmt.Println("Write Error: ", err)
 	}
-	fmt.Println("I am in sendfindcontact")
 
 }
 

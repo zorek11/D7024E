@@ -4,7 +4,7 @@ import (
 	"D7024E-Kademlia/protobuf"
 	"fmt"
 	"net"
-	"time"
+	"strings"
 
 	"github.com/golang/protobuf/proto"
 )
@@ -27,7 +27,18 @@ func buildMessage(input []string) *protobuf.KademliaMessage {
 			SenderAddr: proto.String(input[2]),
 		}
 		return message
-
+	}
+	if input[0] == "LookupContactResponse" {
+		message := &protobuf.KademliaMessage{
+			Label:      proto.String(input[0]),
+			Senderid:   proto.String(input[1]),
+			SenderAddr: proto.String(input[2]),
+			Lookupcontact: &protobuf.KademliaMessage_LookupContact{
+				Id:      proto.String(input[3]),
+				Address: proto.String(input[4]),
+			},
+		}
+		return message
 	} else {
 		message := &protobuf.KademliaMessage{
 			Label:      proto.String("Error"),
@@ -53,40 +64,39 @@ func (this *MessageHandler) handleMessage(channel chan []byte, me Contact, netwo
 	err := proto.Unmarshal(data, message)
 	if err != nil {
 		fmt.Println(err)
-	} else {
-		fmt.Println("\n not fatal error")
-
 	}
-	response := (*protobuf.KademliaMessage)(nil)
-	send := false
-	pingpong := false
+	fmt.Println("\n ========================= \nI am: ", me)
 	switch *message.Label {
 	case "ping":
 		fmt.Println("\n", message)
-		response = buildMessage([]string{"pong", me.ID.String(), me.Address})
-		send = true
-
+		response := buildMessage([]string{"pong", me.ID.String(), me.Address})
+		send(message.GetSenderAddr(), response)
 	case "pong":
 		fmt.Print("\n", message)
-		response = buildMessage([]string{"pong", me.ID.String(), me.Address})
-		pingpong = true
 
 	case "LookupContact":
 		fmt.Print("\n", message, "\n\n")
 		contact := buildContact(message.Lookupcontact)
-		//network.kademlia.LookupContact(&contact)
-		temp := network.kademlia.rt.FindClosestContacts(contact.ID, 20)
-		response = parseContacts([]string{temp[0].ID.String(), temp[0].Address})
-		send = true
-		fmt.Println(response.SenderAddr)
-	case "LookupContactResponse":
-		if message.Lookupcontact != nil {
-			fmt.Print("\n", message)
-			response := buildContact(message.Lookupcontact)
-			network.AddTempResponse(&response)
-		} else {
-			return
+		temp := network.kademlia.rt.FindClosestContacts(contact.ID, 20) //no recursion
+
+		//==================================
+		r := ""
+		for i := 0; i < len(temp); i++ {
+			r = r + temp[i].String() + "\n"
 		}
+		response := &protobuf.KademliaMessage{
+			Label:      proto.String("LookupContactResponse"),
+			Senderid:   proto.String(me.ID.String()),
+			SenderAddr: proto.String(me.Address),
+			Data:       []byte(r),
+		}
+		send(message.GetSenderAddr(), response)
+
+	case "LookupContactResponse":
+		//response := buildContact(message.Lookupcontact)
+		s := string(message.Data)
+		contactList := unparse(s)
+		network.AddResponse(contactList)
 	case "LookupData":
 		fmt.Print("\n", message)
 
@@ -94,41 +104,39 @@ func (this *MessageHandler) handleMessage(channel chan []byte, me Contact, netwo
 		fmt.Print("\n", message)
 
 	default:
-		fmt.Println("PANIC")
+		fmt.Println("PANIC in switch")
 
-	}
-	if send { //marshal and send message
-		data, err = proto.Marshal(response)
-		if err != nil {
-			fmt.Println("Marshal Error: ", err)
-		}
-
-		//LocalAddr, err := net.ResolveUDPAddr("udp", network.kademlia.GetRoutingtable().me.Address)
-		ServerAddr, err := net.ResolveUDPAddr("udp", message.GetSenderAddr())
-		Conn, err := net.ListenUDP("udp", ServerAddr)
-		if err != nil {
-			fmt.Println("UDP-Error: ", err)
-		}
-		defer Conn.Close()
-		fmt.Println("\n writing to UDP")
-		fmt.Println(data)
-		_, err = Conn.WriteToUDP(data, ServerAddr)
-		if err != nil {
-			fmt.Println("Write Error: ", err)
-		}
-		send = false
-	}
-	if message.GetLabel() == "ping" {
-		fmt.Println(time.Now())
-		time.After(time.Second * 3)
-		fmt.Println("Pung")
-		if !pingpong {
-			fmt.Println("Timeout: ", message.GetSenderAddr())
-		}
 	}
 
 }
+func send(Address string, message *protobuf.KademliaMessage) {
+	data, err := proto.Marshal(message)
+	if err != nil {
+		fmt.Println("Marshal Error: ", err)
+	}
+
+	Conn, err := net.Dial("udp", Address)
+	if err != nil {
+		fmt.Println("UDP-Error: ", err)
+	}
+	defer Conn.Close()
+	_, err = Conn.Write(data)
+	if err != nil {
+		fmt.Println("Write Error: ", err)
+	}
+}
+
+func unparse(input string) []Contact {
+	var contactList []Contact
+	split := strings.Split(input, "\n")
+	for i := 0; i < len(split)-1; i++ {
+		out := strings.Split(split[i], "\"")
+		contactList = append(contactList, NewContact(NewKademliaID(out[1]), out[3]))
+
+	}
+	return contactList
+}
 
 func buildContact(message *protobuf.KademliaMessage_LookupContact) Contact {
-	return NewContact(NewKademliaID(*message.ID), *message.Address)
+	return NewContact(NewKademliaID(*message.Id), *message.Address)
 }
