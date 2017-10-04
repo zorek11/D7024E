@@ -8,7 +8,7 @@ message KademliaMessage {
 	optional group LookupContact = 4 {
 		required string ID = 5;
 		required string Address = 6;
-		required string Distance = 7;
+		optional string Distance = 7;
 	}
 }
 

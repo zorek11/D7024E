@@ -63,7 +63,7 @@ func (m *KademliaMessage) GetLookupcontact() *KademliaMessage_LookupContact {
 type KademliaMessage_LookupContact struct {
 	ID               *string `protobuf:"bytes,5,req" json:"ID,omitempty"`
 	Address          *string `protobuf:"bytes,6,req" json:"Address,omitempty"`
-	Distance         *string `protobuf:"bytes,7,req" json:"Distance,omitempty"`
+	Distance         *string `protobuf:"bytes,7,opt" json:"Distance,omitempty"`
 	XXX_unrecognized []byte  `json:"-"`
 }
 
