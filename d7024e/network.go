@@ -38,6 +38,9 @@ func (network *Network) AddResponse(c []Contact) {
 	network.response = c
 }
 
+func (network *Network) GetResponse() []Contact {
+	return network.response
+}
 func (network *Network) AddTempResponse(c *Contact) {
 	network.temp = c
 }
