@@ -37,6 +37,7 @@ func NewKademlia(self Contact) (kademlia *Kademlia) {
 }
 
 func (kademlia *Kademlia) LookupContact(target *Contact) {
+	var mutex = &sync.Mutex{}
 
 	contacts := kademlia.nt.rt.FindClosestContacts(target.ID, count)
 	//thisalpha := alpha % (len(contacts) + 1)
@@ -54,16 +55,18 @@ func (kademlia *Kademlia) LookupContact(target *Contact) {
 	go kademlia.nt.SendFindContactMessage(&contacts[0])
 	//}
 	for {
+
 		if len(kademlia.GetNetwork().GetResponse()) > 0 {
 			//fmt.Println("Response in kademlia: ", kademlia.GetNetwork().GetResponse())
 			//if kademlia.GetNetwork().GetResponse()[0] != nil {
 			temp := kademlia.GetNetwork().GetResponse()[0]
+			fmt.Println("this is first contact: ", temp)
 			if temp[0].ID.String() == target.ID.String() {
 				fmt.Println("This is the correct ID String: " + temp[0].ID.String())
 				kademlia.found = true
 				return
 			} else {
-				var mutex = &sync.Mutex{}
+
 				mutex.Lock()
 				for i := 0; i < alpha; i++ {
 					if i >= len(temp) {
