@@ -96,7 +96,10 @@ func (this *MessageHandler) handleMessage(channel chan []byte, me Contact, netwo
 		//response := buildContact(message.Lookupcontact)
 		s := string(message.Data)
 		contactList := unparse(s)
-		network.AddResponse(contactList)
+		if len(contactList) > 0 {
+			network.AddResponse(contactList)
+		}
+
 	case "LookupData":
 		fmt.Print("\n", message)
 
