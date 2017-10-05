@@ -4,6 +4,7 @@ import (
 	"D7024E-Kademlia/protobuf"
 	"fmt"
 	"net"
+	"sync"
 
 	"github.com/golang/protobuf/proto"
 )
@@ -11,7 +12,7 @@ import (
 type Network struct {
 	me       Contact
 	target   *Contact
-	response []Contact
+	response [][]Contact
 	temp     *Contact
 	rt       *RoutingTable
 }
@@ -24,6 +25,9 @@ func NewNetwork(me Contact, rt *RoutingTable) Network {
 }
 
 func (network *Network) AddMessage(c *Contact) {
+	var mutex = &sync.Mutex{}
+	mutex.Lock()
+	defer mutex.Unlock()
 	network.target = c
 }
 
@@ -36,11 +40,21 @@ func (network *Network) GetTemp() *Contact {
 }*/
 
 func (network *Network) AddResponse(c []Contact) {
-	network.response = c
+	var mutex = &sync.Mutex{}
+	mutex.Lock()
+	defer mutex.Unlock()
+	network.response = append(network.response, [][]Contact{c}...)
 	fmt.Println("\nResponse: ", network.response)
 }
 
-func (network *Network) GetResponse() []Contact {
+func (network *Network) RemoveFirstResponse() {
+	var mutex = &sync.Mutex{}
+	mutex.Lock()
+	defer mutex.Unlock()
+	network.response = network.response[1:]
+}
+
+func (network *Network) GetResponse() [][]Contact {
 	return network.response
 }
 func (network *Network) AddTempResponse(c *Contact) {

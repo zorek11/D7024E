@@ -2,8 +2,7 @@ package d7024e
 
 import (
 	"fmt"
-	"os"
-	"strconv"
+	"sync"
 )
 
 const count = 20
@@ -12,6 +11,7 @@ const alpha = 3
 type Kademlia struct {
 	nt    Network
 	items []string
+	found bool
 }
 
 func (kademlia *Kademlia) AddRoutingtable(c Contact) {
@@ -21,6 +21,9 @@ func (kademlia *Kademlia) AddRoutingtable(c Contact) {
 func (kademlia *Kademlia) GetRoutingtable() *RoutingTable {
 	return kademlia.nt.rt
 }
+func (kademlia *Kademlia) GetFound() bool {
+	return kademlia.found
+}
 
 func (kademlia *Kademlia) GetNetwork() *Network {
 	return &kademlia.nt
@@ -29,6 +32,7 @@ func (kademlia *Kademlia) GetNetwork() *Network {
 func NewKademlia(self Contact) (kademlia *Kademlia) {
 	kademlia = new(Kademlia)
 	kademlia.nt = NewNetwork(self, NewRoutingTable(self))
+	kademlia.found = false
 	return kademlia
 }
 
@@ -49,10 +53,35 @@ func (kademlia *Kademlia) LookupContact(target *Contact) {
 
 	go kademlia.nt.SendFindContactMessage(&contacts[0])
 	//}
+	x := 0
 	for {
-		if kademlia.GetNetwork().GetResponse() != nil {
-			//fmt.Println(tempnetwork.GetResponse()[0].String())
-			break
+		if x < len(kademlia.GetNetwork().GetResponse()) {
+			//fmt.Println("Response in kademlia: ", kademlia.GetNetwork().GetResponse())
+			//if kademlia.GetNetwork().GetResponse()[0] != nil {
+			temp := kademlia.GetNetwork().GetResponse()[x]
+			x++
+			if temp[0].ID.String() == target.ID.String() {
+				fmt.Println("This is the correct ID String: " + temp[0].ID.String())
+				kademlia.found = true
+				return
+			} else {
+				var mutex = &sync.Mutex{}
+				mutex.Lock()
+				for i := 0; i < alpha; i++ {
+					if i >= len(temp) {
+						break
+					}
+					//fmt.Println("This is the new: ", temp[i])
+					go kademlia.nt.SendFindContactMessage(&temp[i])
+
+				}
+
+				//kademlia.nt.RemoveFirstResponse()
+				mutex.Unlock()
+
+			}
+			//}
+
 		}
 	}
 	/*
@@ -95,16 +124,6 @@ func (kademlia *Kademlia) LookupData(hash string) {
 
 func (kademlia *Kademlia) Store(data []byte) {
 	// TODO
-}
-
-func IntConverter(port string) int {
-	i, err := strconv.Atoi(port)
-	if err != nil {
-		// handle error
-		fmt.Println(err)
-		os.Exit(2)
-	}
-	return i
 }
 
 /*
