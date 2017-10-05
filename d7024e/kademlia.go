@@ -37,10 +37,7 @@ func NewKademlia(self Contact) (kademlia *Kademlia) {
 }
 
 func (kademlia *Kademlia) LookupContact(target *Contact) {
-	var mutex = &sync.Mutex{}
-	mutex.Lock()
 	kademlia.nt.AddMessage(target)
-	mutex.Unlock()
 	contacts := kademlia.nt.rt.FindClosestContacts(target.ID, count)
 	//thisalpha := alpha % (len(contacts) + 1)
 	fmt.Println(len(contacts))
@@ -66,7 +63,6 @@ func (kademlia *Kademlia) LookupContact(target *Contact) {
 				return
 			} else {
 
-				mutex.Lock()
 				for i := 0; i < alpha; i++ {
 					if i >= len(temp) {
 						break
@@ -77,7 +73,6 @@ func (kademlia *Kademlia) LookupContact(target *Contact) {
 				}
 
 				kademlia.nt.RemoveFirstResponse()
-				mutex.Unlock()
 
 			}
 			//}
