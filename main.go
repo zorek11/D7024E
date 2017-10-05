@@ -2,45 +2,44 @@ package main
 
 import (
 	kademlia "D7024E-Kademlia/d7024e"
-	"sync"
 	//"fmt"
 )
 
 //export GOPATH=$HOME/go
 func main() {
-	var mutex = &sync.Mutex{}
-	mutex.Lock()
-	defer mutex.Unlock()
+	//var mutex = &sync.Mutex{}
+	//mutex.Lock()
+	//defer mutex.Unlock()
 
-	contact := kademlia.NewContact(kademlia.NewKademliaID("FFFFFFFFFFF11111111111111111111111111111"),
-		"127.0.0.1:1991")
+	//contact := kademlia.NewContact(kademlia.NewKademliaID("FFFFFFFFFFF11111111111111111111111111111"),
+	//	"127.0.0.1:1191")
 	contact2 := kademlia.NewContact(kademlia.NewKademliaID("1FFFFFFF11111111111111111111111111111112"),
-		"127.0.0.1:1722")
+		"127.0.0.1:1222")
 	contact3 := kademlia.NewContact(kademlia.NewKademliaID("1FFFFFFF11111111111111111111111111111113"),
-		"127.0.0.1:1723")
+		"127.0.0.1:1223")
 
 	me := kademlia.NewContact(kademlia.NewKademliaID("FFFFFFFF00000000000000000000000000000000"),
-		"127.0.0.1:9999")
+		"127.0.0.1:1999")
 
 	//rt := kademlia.NewRoutingTable(me)
 	//rt.AddContact(contact)
 	//rt.AddContact(contact2)
-	me.CalcDistance(contact.ID)
-	contact.CalcDistance(me.ID)
-	me.CalcDistance(contact2.ID)
+	//me.CalcDistance(contact.ID)
+	//contact.CalcDistance(me.ID)
+	//me.CalcDistance(contact2.ID)
 
 	kad1 := kademlia.NewKademlia(me)
-	net1 := kademlia.NewNetwork(me, kad1)
+	//net1 := kademlia.NewNetwork(me, kad1)
 	//kad1.AddRoutingtable(contact)
 	kad1.AddRoutingtable(contact3)
 
 	kad2 := kademlia.NewKademlia(contact2)
-	net2 := kademlia.NewNetwork(contact2, kad2)
+	//net2 := kademlia.NewNetwork(contact2, kad2)
 	kad2.AddRoutingtable(me)
 	kad2.AddRoutingtable(contact3)
 
 	kad3 := kademlia.NewKademlia(contact3)
-	net3 := kademlia.NewNetwork(contact3, kad3)
+	//net3 := kademlia.NewNetwork(contact3, kad3)
 	kad3.AddRoutingtable(me)
 	kad3.AddRoutingtable(contact2)
 	/*
@@ -51,11 +50,21 @@ func main() {
 	*/
 	//netc.SendPingMessage(&contact)
 
+	net1 := kad1.GetNetwork()
+
+	net2 := kad2.GetNetwork()
+
+	net3 := kad3.GetNetwork()
+
 	go net1.Listen(me)
 	go net2.Listen(contact2)
 	go net3.Listen(contact3)
 	// go net1.SendPingMessage(&contact2)
-	go net1.GetKademlia().LookupContact(&contact2)
+	//net1.AddMessage(&contact2)
+	go kad1.LookupContact(&contact2)
+
+	//go net1.SendFindContactMessage(&contact2)
+
 	/*for i := 0; i < 5; i++ {
 		go net1.SendPingMessage(&contact2)
 		//go net.SendPingMessage(&contact3)
@@ -71,5 +80,9 @@ func main() {
 		}
 	*/
 	for {
+		if kad1.GetNetwork().GetResponse() != nil {
+			//fmt.Println(kad1.GetNetwork().GetResponse())
+			break
+		}
 	}
 }

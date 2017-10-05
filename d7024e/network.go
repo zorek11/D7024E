@@ -12,14 +12,14 @@ type Network struct {
 	me       Contact
 	target   *Contact
 	response []Contact
-	kademlia *Kademlia
 	temp     *Contact
+	rt       *RoutingTable
 }
 
-func NewNetwork(me Contact, kad *Kademlia) *Network {
-	network := &Network{}
+func NewNetwork(me Contact, rt *RoutingTable) Network {
+	network := Network{}
 	network.me = me
-	network.kademlia = kad
+	network.rt = rt
 	return network
 }
 
@@ -30,13 +30,14 @@ func (network *Network) AddMessage(c *Contact) {
 func (network *Network) GetTemp() *Contact {
 	return network.temp
 }
-func (network *Network) GetKademlia() *Kademlia {
+
+/*func (network *Network) GetKademlia() *Kademlia {
 	return network.kademlia
-}
+}*/
 
 func (network *Network) AddResponse(c []Contact) {
 	network.response = c
-	fmt.Println("\nResponse: ", c)
+	fmt.Println("\nResponse: ", network.response)
 }
 
 func (network *Network) GetResponse() []Contact {

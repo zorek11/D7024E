@@ -10,28 +10,33 @@ const count = 20
 const alpha = 3
 
 type Kademlia struct {
-	rt    *RoutingTable
+	nt    Network
 	items []string
 }
 
 func (kademlia *Kademlia) AddRoutingtable(c Contact) {
-	kademlia.rt.AddContact(c)
+	kademlia.nt.rt.AddContact(c)
 }
 
 func (kademlia *Kademlia) GetRoutingtable() *RoutingTable {
-	return kademlia.rt
+	return kademlia.nt.rt
+}
+
+func (kademlia *Kademlia) GetNetwork() *Network {
+	return &kademlia.nt
 }
 
 func NewKademlia(self Contact) (kademlia *Kademlia) {
 	kademlia = new(Kademlia)
-	kademlia.rt = NewRoutingTable(self)
+	kademlia.nt = NewNetwork(self, NewRoutingTable(self))
 	return kademlia
 }
 
 func (kademlia *Kademlia) LookupContact(target *Contact) {
-	contacts := kademlia.rt.FindClosestContacts(target.ID, count)
-	thisalpha := alpha % len(contacts)
 
+	contacts := kademlia.nt.rt.FindClosestContacts(target.ID, count)
+	//thisalpha := alpha % (len(contacts) + 1)
+	fmt.Println(len(contacts))
 	if contacts[0].ID == target.ID {
 		//return &contacts[0]
 		fmt.Println("Target found: " + target.String())
@@ -39,38 +44,48 @@ func (kademlia *Kademlia) LookupContact(target *Contact) {
 		return
 	}
 
-	networks := getNewNetworks(kademlia, contacts, thisalpha, target)
-	sendFindContactForAll(networks, target)
+	//tempnetwork := NewNetwork(nt.rt, kademlia)
+	kademlia.nt.AddMessage(target)
 
+	go kademlia.nt.SendFindContactMessage(&contacts[0])
+	//}
 	for {
-		for k := 0; k < thisalpha; k++ {
-
-			if networks[k].GetTemp() != nil {
-				break
-			}
-
-			//fmt.Println(networks[k].GetTemp())
-			//fmt.Println(networks[k].response == nil)
-			if networks[k].response != nil {
-				if networks[k].response[0].ID == target.ID {
-					fmt.Println("Target found: " + target.String())
-					fmt.Println("With address: " + networks[k].response[0].String())
-					return
-					//return networks[k].response[0]
-				} else {
-					tempAlpha := alpha % len(networks[k].response)
-					tempNetworks := getNewNetworks(kademlia, networks[k].GetResponse(), tempAlpha, target)
-					sendFindContactForAll(tempNetworks, target)
-					networks = remove(networks, k)
-					networks = combineNetworks(networks, tempNetworks)
-					thisalpha = len(networks)
-
-				}
-			}
-
+		if kademlia.GetNetwork().GetResponse() != nil {
+			//fmt.Println(tempnetwork.GetResponse()[0].String())
+			break
 		}
 	}
+	/*
+		for {
+			for k := 0; k < thisalpha; k++ {
 
+				if networks[k].GetResponse() != nil {
+					fmt.Println(networks[k].GetResponse()[0].String())
+					break
+				}
+
+				//fmt.Println(networks[k].GetResponse())
+				//fmt.Println(networks[k].response == nil)
+				if networks[k].GetResponse() != nil {
+					if networks[k].response[0].ID == target.ID {
+						fmt.Println("Target found: " + target.String())
+						fmt.Println("With address: " + networks[k].response[0].String())
+						return
+						//return networks[k].response[0]
+					} else {
+						tempAlpha := alpha % (len(networks[k].response) + 1)
+						tempNetworks := getNewNetworks(kademlia, networks[k].GetResponse(), tempAlpha, target)
+						sendFindContactForAll(tempNetworks, target)
+						networks = remove(networks, k)
+						networks = combineNetworks(networks, tempNetworks)
+						thisalpha = len(networks)
+
+					}
+				}
+
+			}
+		}
+	*/
 	//return &contacts[0]
 
 }
@@ -92,15 +107,17 @@ func IntConverter(port string) int {
 	return i
 }
 
+/*
 func getNewNetworks(kademlia *Kademlia, contacts []Contact, alpha int, target *Contact) []*Network {
 	networks := make([]*Network, alpha)
+
 	for i := 0; i < alpha; i++ {
 		networks[i] = NewNetwork(kademlia.rt.me, kademlia)
 		networks[i].AddMessage(target)
 	}
 	return networks
 }
-
+*/
 func sendFindContactForAll(networks []*Network, target *Contact) {
 	for i := 0; i < len(networks); i++ {
 		go networks[i].SendFindContactMessage(target)
