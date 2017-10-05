@@ -73,6 +73,7 @@ func (this *MessageHandler) handleMessage(channel chan []byte, me Contact, netwo
 		send(message.GetSenderAddr(), response)
 	case "pong":
 		fmt.Print("\n", message)
+		network.pingResp = true
 
 	case "LookupContact":
 		fmt.Print("\n", message, "\n\n")

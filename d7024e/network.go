@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"sync"
+	"time"
 
 	"github.com/golang/protobuf/proto"
 )
@@ -16,13 +17,13 @@ type Network struct {
 	temp     *Contact
 	rt       *RoutingTable
 	mtx      sync.Mutex
+	pingResp bool
 }
 
 func NewNetwork(me Contact, rt *RoutingTable) Network {
 	network := Network{}
 	network.me = me
 	network.rt = rt
-	network.mtx = sync.Mutex{}
 	return network
 }
 
@@ -86,6 +87,12 @@ func (network *Network) Listen(me Contact) {
 }
 
 func (network *Network) SendPingMessage(contact *Contact) {
+	fmt.Println("KUK")
+	network.mtx.Lock()
+	defer network.mtx.Unlock()
+	//build and send ping message
+
+	network.pingResp = false
 	message := buildMessage([]string{"ping", network.me.ID.String(), network.me.Address})
 	data, err := proto.Marshal(message)
 	if err != nil {
@@ -96,14 +103,17 @@ func (network *Network) SendPingMessage(contact *Contact) {
 		fmt.Println("UDP-Error: ", err)
 	}
 	defer Conn.Close()
-
 	_, err = Conn.Write(data)
-
 	if err != nil {
 		fmt.Println("Write Error: ", err)
 	}
-	//time.Sleep(time.Second * 2)
-
+	//wait for timeout (2sec)
+	time.Sleep(time.Second * 2)
+	if network.pingResp {
+		fmt.Println("Contact alive:", contact.Address)
+	} else {
+		fmt.Println("Contact dead:", contact.Address)
+	}
 }
 
 func (network *Network) SendFindContactMessage(contact *Contact) {
