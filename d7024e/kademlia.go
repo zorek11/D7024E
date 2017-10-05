@@ -124,7 +124,7 @@ func (kademlia *Kademlia) LookupData(hash string) {
 }
 
 func (kademlia *Kademlia) Store(data []byte) {
-	// TODO
+	storage.StoreFile(key, value, publisher)
 }
 
 /*
