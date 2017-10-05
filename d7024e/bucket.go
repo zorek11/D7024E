@@ -33,6 +33,30 @@ func (bucket *bucket) AddContact(contact Contact) {
 	}
 }
 
+func (bucket *bucket) RemoveContact(contact Contact) {
+	var element *list.Element
+	for e := bucket.list.Front(); e != nil; e = e.Next() {
+		nodeID := e.Value.(Contact).ID
+
+		if (contact).ID.Equals(nodeID) {
+			bucket.list.Remove(element)
+			break
+		}
+	}
+}
+
+func (bucket *bucket) ContactinBucket(contact Contact) bool {
+	for e := bucket.list.Front(); e != nil; e = e.Next() {
+		nodeID := e.Value.(Contact).ID
+
+		if (contact).ID.Equals(nodeID) {
+			return true
+		}
+	}
+	return false
+
+}
+
 func (bucket *bucket) GetContactAndCalcDistance(target *KademliaID) []Contact {
 	var contacts []Contact
 
