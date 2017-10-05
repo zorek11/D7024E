@@ -53,13 +53,11 @@ func (kademlia *Kademlia) LookupContact(target *Contact) {
 
 	go kademlia.nt.SendFindContactMessage(&contacts[0])
 	//}
-	x := 0
 	for {
-		if x < len(kademlia.GetNetwork().GetResponse()) {
+		if len(kademlia.GetNetwork().GetResponse()) > 0 {
 			//fmt.Println("Response in kademlia: ", kademlia.GetNetwork().GetResponse())
 			//if kademlia.GetNetwork().GetResponse()[0] != nil {
-			temp := kademlia.GetNetwork().GetResponse()[x]
-			x++
+			temp := kademlia.GetNetwork().GetResponse()[0]
 			if temp[0].ID.String() == target.ID.String() {
 				fmt.Println("This is the correct ID String: " + temp[0].ID.String())
 				kademlia.found = true
@@ -76,7 +74,7 @@ func (kademlia *Kademlia) LookupContact(target *Contact) {
 
 				}
 
-				//kademlia.nt.RemoveFirstResponse()
+				kademlia.nt.RemoveFirstResponse()
 				mutex.Unlock()
 
 			}
