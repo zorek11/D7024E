@@ -15,19 +15,20 @@ type Network struct {
 	response [][]Contact
 	temp     *Contact
 	rt       *RoutingTable
+	mtx      sync.Mutex
 }
 
 func NewNetwork(me Contact, rt *RoutingTable) Network {
 	network := Network{}
 	network.me = me
 	network.rt = rt
+	network.mtx = sync.Mutex{}
 	return network
 }
 
 func (network *Network) AddMessage(c *Contact) {
-	var mutex = &sync.Mutex{}
-	mutex.Lock()
-	defer mutex.Unlock()
+	network.mtx.Lock()
+	defer network.mtx.Unlock()
 	network.target = c
 }
 
@@ -40,17 +41,16 @@ func (network *Network) GetTemp() *Contact {
 }*/
 
 func (network *Network) AddResponse(c []Contact) {
-	var mutex = &sync.Mutex{}
-	mutex.Lock()
-	defer mutex.Unlock()
+	network.mtx.Lock()
+	defer network.mtx.Unlock()
 	network.response = append(network.response, [][]Contact{c}...)
 	fmt.Println("\nResponse: ", network.response)
 }
 
 func (network *Network) RemoveFirstResponse() {
-	var mutex = &sync.Mutex{}
-	mutex.Lock()
-	defer mutex.Unlock()
+
+	network.mtx.Lock()
+	defer network.mtx.Unlock()
 	network.response = network.response[1:]
 }
 
@@ -73,9 +73,7 @@ func (network *Network) Listen(me Contact) {
 
 	channel := make(chan []byte)
 	buf := make([]byte, 1024)
-
 	for {
-
 		go messagehandler.handleMessage(channel, me, network)
 		n, _, err := Conn.ReadFromUDP(buf)
 		channel <- buf[0:n]
