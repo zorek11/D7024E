@@ -1,7 +1,7 @@
 package main
 
 import (
-	kademlia "D7024E/d7024e"
+	kademlia "D7024E-Kademlia/d7024e"
 	//"fmt"
 )
 
