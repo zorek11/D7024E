@@ -1,15 +1,6 @@
 syntax = "proto2";
 package protobuf;
 
-<<<<<<< HEAD
-	message KademliaMessage {
-		required string label = 1;
-		required string senderid = 2;
-		required string senderAddr = 3;
-		optional string lookupContact = 4;
-		optional string key = 5;
-		optional string value = 6;
-=======
 message KademliaMessage {
 	required string label = 1;
 	required string senderid = 2;
@@ -18,7 +9,6 @@ message KademliaMessage {
 		required string id = 5;
 		optional string address = 6;
 		optional string distance = 7;
->>>>>>> 2e01575072c29155d4862dbf7c2399005958e8b0
 	}
 	optional bytes data = 8;
 }

@@ -8,10 +8,6 @@ const count = 20
 const alpha = 3
 
 type Kademlia struct {
-<<<<<<< HEAD
-	rt *RoutingTable
-	ht  map[KademliaID][]byte
-=======
 	nt    Network
 	items []string
 	found bool
@@ -30,20 +26,12 @@ func (kademlia *Kademlia) GetFound() bool {
 
 func (kademlia *Kademlia) GetNetwork() *Network {
 	return &kademlia.nt
->>>>>>> 2e01575072c29155d4862dbf7c2399005958e8b0
 }
 
 func NewKademlia(self Contact) (kademlia *Kademlia) {
 	kademlia = new(Kademlia)
-<<<<<<< HEAD
-	kademlia.rt = NewRoutingTable(self)
-	kademlia.ht = make(map[KademliaID][]byte)
-	//kademlia.network = new(Network)
-	//s := strings.Split(self.Address, ":")
-=======
 	kademlia.nt = NewNetwork(self, NewRoutingTable(self))
 	kademlia.found = false
->>>>>>> 2e01575072c29155d4862dbf7c2399005958e8b0
 	return kademlia
 }
 
@@ -151,11 +139,6 @@ func (kademlia *Kademlia) LookupData(hash string) {
 		}
 	}
 
-<<<<<<< HEAD
-func (kademlia *Kademlia) LookupData(hash string) {
-			data := kademlia.ht[key]
-=======
->>>>>>> 2e01575072c29155d4862dbf7c2399005958e8b0
 }
 
 func (kademlia *Kademlia) Store(key string, value string) {
