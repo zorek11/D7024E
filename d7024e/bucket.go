@@ -34,12 +34,11 @@ func (bucket *bucket) AddContact(contact Contact) {
 }
 
 func (bucket *bucket) RemoveContact(contact Contact) {
-	var element *list.Element
 	for e := bucket.list.Front(); e != nil; e = e.Next() {
 		nodeID := e.Value.(Contact).ID
 
 		if (contact).ID.Equals(nodeID) {
-			bucket.list.Remove(element)
+			bucket.list.Remove(e)
 			break
 		}
 	}
@@ -54,7 +53,6 @@ func (bucket *bucket) ContactinBucket(contact Contact) bool {
 		}
 	}
 	return false
-
 }
 
 func (bucket *bucket) GetContactAndCalcDistance(target *KademliaID) []Contact {

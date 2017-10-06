@@ -2,6 +2,7 @@ package d7024e
 
 import (
 	"D7024E-Kademlia/protobuf"
+	"container/list"
 	"fmt"
 	"net"
 	"sync"
@@ -11,19 +12,21 @@ import (
 )
 
 type Network struct {
-	me       Contact
-	target   *Contact
-	response [][]Contact
-	temp     *Contact
-	rt       *RoutingTable
-	mtx      sync.Mutex
-	pingResp bool
+	me          Contact
+	target      *Contact
+	response    [][]Contact
+	temp        *Contact
+	rt          *RoutingTable
+	mtx         sync.Mutex
+	pingResp    bool
+	pingChannel chan bool
 }
 
 func NewNetwork(me Contact, rt *RoutingTable) Network {
 	network := Network{}
 	network.me = me
 	network.rt = rt
+	network.pingChannel = make(chan bool)
 	return network
 }
 
@@ -75,7 +78,7 @@ func (network *Network) Listen(me Contact) {
 	channel := make(chan []byte)
 	buf := make([]byte, 1024)
 	for {
-		go messagehandler.handleMessage(channel, me, network)
+		go messagehandler.handleMessage(channel, &me, network)
 		n, _, err := Conn.ReadFromUDP(buf)
 		channel <- buf[0:n]
 		//fmt.Println("Connection recived: ", string(buf[0:n]), " \nfrom ", addr)
@@ -87,7 +90,6 @@ func (network *Network) Listen(me Contact) {
 }
 
 func (network *Network) SendPingMessage(contact *Contact) {
-	fmt.Println("KUK")
 	network.mtx.Lock()
 	defer network.mtx.Unlock()
 	//build and send ping message
@@ -111,8 +113,10 @@ func (network *Network) SendPingMessage(contact *Contact) {
 	time.Sleep(time.Second * 2)
 	if network.pingResp {
 		fmt.Println("Contact alive:", contact.Address)
+		//network.pingChannel <- true
 	} else {
 		fmt.Println("Contact dead:", contact.Address)
+		//network.pingChannel <- false
 	}
 }
 
@@ -150,4 +154,33 @@ func (network *Network) SendFindDataMessage(hash string) {
 
 func (network *Network) SendStoreMessage(data []byte) {
 	// TODO
+}
+
+func (network *Network) updateRoutingtable(contact *Contact) {
+	network.mtx.Lock()
+	defer network.mtx.Unlock()
+	bucket := network.rt.buckets[network.rt.getBucketIndex(contact.ID)]
+	var element *list.Element
+	for e := bucket.list.Front(); e != nil; e = e.Next() {
+		nodeID := e.Value.(Contact).ID
+
+		if (contact).ID.Equals(nodeID) {
+			element = e
+		}
+	}
+
+	if element == nil { //If the contact is not in my bucket
+		if bucket.list.Len() < bucketSize { //if my bucket has empty slots
+			bucket.list.PushFront(contact)
+		} else {
+			lastContact := bucket.list.Back().Value.(Contact)
+			go network.SendPingMessage(&lastContact)
+			if !network.pingResp { //if I have no resonse add delete contact and add new
+				bucket.RemoveContact(lastContact)
+				bucket.AddContact(*contact)
+			}
+		}
+	} else { //if I have the element move it to front
+		bucket.list.MoveToFront(element)
+	}
 }

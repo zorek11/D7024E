@@ -58,14 +58,17 @@ func parseContacts(input []string) *protobuf.KademliaMessage {
 	return message
 }
 
-func (this *MessageHandler) handleMessage(channel chan []byte, me Contact, network *Network) {
+func (this *MessageHandler) handleMessage(channel chan []byte, me *Contact, network *Network) {
 	data := <-channel
 	message := &protobuf.KademliaMessage{}
 	err := proto.Unmarshal(data, message)
 	if err != nil {
 		fmt.Println(err)
 	}
-	fmt.Println("\n ========================= \nI am: ", me)
+	fmt.Println("\n\nListner:", me)
+	sender := NewContact(NewKademliaID(message.GetSenderid()), message.GetSenderAddr())
+	fmt.Println("Sender: ", sender)
+	network.updateRoutingtable(&sender)
 	switch *message.Label {
 	case "ping":
 		fmt.Println("\n", message)
