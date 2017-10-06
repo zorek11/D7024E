@@ -2,6 +2,7 @@ package d7024e
 
 import (
 	"fmt"
+	"crypto/sha1"
 )
 
 const count = 20
@@ -30,7 +31,7 @@ func (kademlia *Kademlia) GetNetwork() *Network {
 
 func NewKademlia(self Contact) (kademlia *Kademlia) {
 	kademlia = new(Kademlia)
-	kademlia.nt = NewNetwork(self, NewRoutingTable(self))
+	kademlia.nt = NewNetwork(self, NewRoutingTable(self), NewStorage())
 	kademlia.found = false
 	return kademlia
 }
@@ -141,8 +142,13 @@ func (kademlia *Kademlia) LookupData(hash string) {
 
 }
 
-func (kademlia *Kademlia) Store(key string, value string) {
-			kademlia.ht[key] = value
+func (kademlia *Kademlia) Store(data string) {
+	hashdata := []byte(data)
+	key := KademliaID(sha1.Sum(hashdata))
 
+	contacts := kademlia.nt.rt.FindClosestContacts(&key, count)
 
+	for j := range contacts {
+		go kademlia.nt.SendStoreMessage(&contacts[j], &key, data)
+	}
 }

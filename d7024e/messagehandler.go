@@ -99,13 +99,18 @@ func (this *MessageHandler) handleMessage(channel chan []byte, me Contact, netwo
 		contactList := unparse(s)
 		if len(contactList) > 0 {
 			network.AddResponse(contactList)
-
 		}
+
 	case "LookupData":
 		fmt.Print("\n", message)
 
 	case "StoreData":
-		fmt.Print("\n", message)
+		key := NewKademliaID(*(message.Key))
+		value := *(message.Value)
+		senderid := *(message.Senderid)
+		network.storage.StoreFile(key, value, senderid)
+		network.storage.RetrieveFile(key)
+		fmt.Println(network.storage.RetrieveFile(key))
 
 	default:
 		fmt.Println("PANIC in switch")

@@ -24,6 +24,8 @@ type KademliaMessage struct {
 	SenderAddr       *string                        `protobuf:"bytes,3,req,name=senderAddr" json:"senderAddr,omitempty"`
 	Lookupcontact    *KademliaMessage_LookupContact `protobuf:"group,4,opt,name=LookupContact" json:"lookupcontact,omitempty"`
 	Data             []byte                         `protobuf:"bytes,8,opt,name=data" json:"data,omitempty"`
+	Key              *string                        `protobuf:"bytes,9,opt,name=key" json:"key,omitempty"`
+	Value            *string                        `protobuf:"bytes,10,opt,name=value" json:"value,omitempty"`
 	XXX_unrecognized []byte                         `json:"-"`
 }
 
