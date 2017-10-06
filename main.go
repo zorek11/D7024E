@@ -122,7 +122,7 @@ func main() {
 	go net7.Listen(contact7)
 	// go net1.SendPingMessage(&contact2)
 	//net1.AddMessage(&contact2)
-	go kad1.LookupContact(&contact7)
+	go kad1.Store("aids")
 
 	//go net1.SendFindContactMessage(&contact2)
 

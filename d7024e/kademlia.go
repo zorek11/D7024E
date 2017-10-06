@@ -3,6 +3,7 @@ package d7024e
 import (
 	"fmt"
 	"sync"
+	"crypto/sha1"
 )
 
 const count = 20
@@ -124,16 +125,13 @@ func (kademlia *Kademlia) LookupData(hash string) {
 }
 
 func (kademlia *Kademlia) Store(data string) {
-	hash := sha1.new()
-	io.WriteString(h, data)
-	tempkey := h.Sum(nil)
+	hashdata := []byte(data)
+	key := KademliaID(sha1.Sum(hashdata))
 
-	key := newKademliaID(tempkey)
-	
-	contacts := kademlia.rt.FindClosestContacts(key, count)
+	contacts := kademlia.nt.rt.FindClosestContacts(&key, count)
 
-	for j, contact := range contacts {
-		go SendStoreMessage(&contacts[j], key, data)
+	for j := range contacts {
+		go kademlia.nt.SendStoreMessage(&contacts[j], &key, data)
 	}
 }
 /*

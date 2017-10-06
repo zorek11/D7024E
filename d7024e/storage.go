@@ -1,25 +1,32 @@
 package d7024e
 
+import (
+	"fmt"
+
+)
 type Storage struct {
-  	publisherht  map[KademliaID][]byte
-    valueht  map[KademliaID][]byte
+  	publisherht  map[*KademliaID]string
+    valueht  map[*KademliaID]string
     //pin   boolean //TODO: ADD LATER???
   }
 
   func NewStorage() Storage {
-    publisherht = make(map[KademliaID][]byte)
-    valueht = make(map[KademliaID][]byte)
+    var storage Storage
+    storage.publisherht = make(map[*KademliaID]string)
+    storage.valueht = make(map[*KademliaID]string)
   	return storage
   }
 
-  func (storage *Storage) StoreFile(key KademliaID, value string, publisher string){
+  func (storage *Storage) StoreFile(key *KademliaID, value string, publisher string){
+      fmt.Println(value)
       storage.publisherht[key] = publisher
       storage.valueht[key] = value
+      
   }
-  func (storage *Storage) RetrieveFile(key KademliaID{
-      storage.valueht[key]
+  func (storage *Storage) RetrieveFile(key *KademliaID) string {
+      return storage.valueht[key]
   }
 
-	func (storage *Storage) RetrievePublisher(key KademliaID, value string, publisher Contact){
-			storage.publisherht[key]
+	func (storage *Storage) RetrievePublisher(key *KademliaID, value string, publisher string) string{
+			return storage.publisherht[key]
 	}

@@ -15,10 +15,10 @@ type Network struct {
 	response [][]Contact
 	temp     *Contact
 	rt       *RoutingTable
-	storage  *Storage
+	storage  Storage
 }
 
-func NewNetwork(me Contact, rt *RoutingTable, st *Storage) Network {
+func NewNetwork(me Contact, rt *RoutingTable, st Storage) Network {
 	network := Network{}
 	network.me = me
 	network.rt = rt
@@ -142,14 +142,14 @@ func (network *Network) SendFindDataMessage(hash string) {
 	// TODO
 }
 
-func (network *Network) SendStoreMessage(contact *Contact, key *KademliaID, data string) {
+func (network *Network) SendStoreMessage(contact *Contact, key *KademliaID, value string) {
 
 	message := &protobuf.KademliaMessage{
 		Label:         proto.String("StoreData"),
 		Senderid:      proto.String(network.me.ID.String()),
 		SenderAddr:    proto.String(network.me.Address),
 		Key: proto.String(key.String()),
-		Value: prot.String(data),
+		Value: proto.String(value),
 	}
 		data, err := proto.Marshal(message)
 		if err != nil {
