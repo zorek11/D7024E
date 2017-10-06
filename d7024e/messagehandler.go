@@ -77,8 +77,8 @@ func (this *MessageHandler) handleMessage(channel chan []byte, me Contact, netwo
 
 	case "LookupContact":
 		fmt.Print("\n", message, "\n\n")
-		contact := buildContact(message.Lookupcontact)
-		temp := network.rt.FindClosestContacts(contact.ID, 20) //no recursion
+		id := NewKademliaID(*message.Lookupcontact.Id)
+		temp := network.rt.FindClosestContacts(id, 20) //no recursion
 
 		//==================================
 		r := ""

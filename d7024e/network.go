@@ -11,13 +11,14 @@ import (
 )
 
 type Network struct {
-	me       Contact
-	target   *Contact
-	response [][]Contact
-	temp     *Contact
-	rt       *RoutingTable
-	mtx      *sync.Mutex
-	pingResp bool
+	me        Contact
+	target    *KademliaID
+	response  [][]Contact
+	temp      *Contact
+	rt        *RoutingTable
+	mtx       *sync.Mutex
+	dataFound string
+	pingResp  bool
 }
 
 func NewNetwork(me Contact, rt *RoutingTable) Network {
@@ -25,17 +26,24 @@ func NewNetwork(me Contact, rt *RoutingTable) Network {
 	network.me = me
 	network.rt = rt
 	network.mtx = &sync.Mutex{}
+	network.dataFound = ""
 	return network
 }
 
-func (network *Network) AddMessage(c *Contact) {
+func (network *Network) AddMessage(c *KademliaID) {
 	network.mtx.Lock()
 	defer network.mtx.Unlock()
 	network.target = c
 }
 
-func (network *Network) GetTemp() *Contact {
-	return network.temp
+func (network *Network) AddData(s string) {
+	network.mtx.Lock()
+	defer network.mtx.Unlock()
+	network.dataFound = s
+}
+
+func (network *Network) GetData() string {
+	return network.dataFound
 }
 
 /*func (network *Network) GetKademlia() *Kademlia {
@@ -120,8 +128,7 @@ func (network *Network) SendFindContactMessage(contact *Contact) {
 		Senderid:   proto.String(network.me.ID.String()),
 		SenderAddr: proto.String(network.me.Address),
 		Lookupcontact: &protobuf.KademliaMessage_LookupContact{
-			Id:      proto.String(network.target.ID.String()),
-			Address: proto.String(network.target.Address),
+			Id: proto.String(network.target.String()),
 		},
 	}
 
