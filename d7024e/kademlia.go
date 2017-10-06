@@ -1,8 +1,8 @@
 package d7024e
 
 import (
+	"crypto/sha1"
 	"fmt"
-	"sync"
 )
 
 const count = 20
@@ -31,13 +31,13 @@ func (kademlia *Kademlia) GetNetwork() *Network {
 
 func NewKademlia(self Contact) (kademlia *Kademlia) {
 	kademlia = new(Kademlia)
-	kademlia.nt = NewNetwork(self, NewRoutingTable(self))
+	kademlia.nt = NewNetwork(self, NewRoutingTable(self), NewStorage())
 	kademlia.found = false
 	return kademlia
 }
 
 func (kademlia *Kademlia) LookupContact(target *Contact) {
-	kademlia.nt.AddMessage(target)
+	kademlia.nt.AddMessage(target.ID)
 	contacts := kademlia.nt.rt.FindClosestContacts(target.ID, count)
 	//thisalpha := alpha % (len(contacts) + 1)
 	fmt.Println(len(contacts))
@@ -49,8 +49,12 @@ func (kademlia *Kademlia) LookupContact(target *Contact) {
 	}
 
 	//tempnetwork := NewNetwork(nt.rt, kademlia)
-
-	go kademlia.nt.SendFindContactMessage(&contacts[0])
+	for j := 0; j < alpha; j++ {
+		if j >= len(contacts) {
+			break
+		}
+		go kademlia.nt.SendFindContactMessage(&contacts[j])
+	}
 	//}
 	for {
 		if len(kademlia.GetNetwork().GetResponse()) > 0 {
@@ -84,36 +88,41 @@ func (kademlia *Kademlia) LookupContact(target *Contact) {
 
 func (kademlia *Kademlia) LookupData(hash string) {
 
-	target := NewContact(NewKademliaID(hash), "")
-	contacts := kademlia.nt.rt.FindClosestContacts(target.ID, count)
-	//thisalpha := alpha % (len(contacts) + 1)
+	target := NewKademliaID(hash)
+
+	kademlia.nt.AddMessage(target)
+	contacts := kademlia.nt.rt.FindClosestContacts(target, count)
 	fmt.Println(len(contacts))
-	if contacts[0].ID == target.ID {
-		//return &contacts[0]
+	if contacts[0].ID == target {
+		//TODO change to check local hash
 		fmt.Println("Target found: " + target.String())
 		fmt.Println("With address: " + contacts[0].String())
 		return
 	}
 
 	//tempnetwork := NewNetwork(nt.rt, kademlia)
-	kademlia.nt.AddMessage(&target)
 
-	go kademlia.nt.SendFindContactMessage(&contacts[0])
+	for j := 0; j < alpha; j++ {
+		if j >= len(contacts) {
+			break
+		}
+		go kademlia.nt.SendFindContactMessage(&contacts[j])
+	}
 	//}
-	x := 0
 	for {
-		if x < len(kademlia.GetNetwork().GetResponse()) {
+		if kademlia.nt.GetData() != "" {
+			fmt.Println(kademlia.nt.GetData())
+		}
+		if len(kademlia.GetNetwork().GetResponse()) > 0 {
 			//fmt.Println("Response in kademlia: ", kademlia.GetNetwork().GetResponse())
 			//if kademlia.GetNetwork().GetResponse()[0] != nil {
-			temp := kademlia.GetNetwork().GetResponse()[x]
-			x++
-			if temp[0].ID.String() == target.ID.String() {
+			temp := kademlia.GetNetwork().GetResponse()[0]
+			if temp[0].ID.String() == target.String() {
 				fmt.Println("This is the correct ID String: " + temp[0].ID.String())
 				kademlia.found = true
 				return
 			} else {
-				var mutex = &sync.Mutex{}
-				mutex.Lock()
+
 				for i := 0; i < alpha; i++ {
 					if i >= len(temp) {
 						break
@@ -123,8 +132,7 @@ func (kademlia *Kademlia) LookupData(hash string) {
 
 				}
 
-				//kademlia.nt.RemoveFirstResponse()
-				mutex.Unlock()
+				kademlia.nt.RemoveFirstResponse()
 
 			}
 			//}
@@ -134,6 +142,13 @@ func (kademlia *Kademlia) LookupData(hash string) {
 
 }
 
-func (kademlia *Kademlia) Store(data []byte) {
-	// TODO
+func (kademlia *Kademlia) Store(data string) {
+	hashdata := []byte(data)
+	key := KademliaID(sha1.Sum(hashdata))
+
+	contacts := kademlia.nt.rt.FindClosestContacts(&key, count)
+
+	for j := range contacts {
+		go kademlia.nt.SendStoreMessage(&contacts[j], &key, data)
+	}
 }

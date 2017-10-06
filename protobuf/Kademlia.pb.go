@@ -26,6 +26,8 @@ type KademliaMessage struct {
 	SenderAddr       *string                        `protobuf:"bytes,3,req,name=senderAddr" json:"senderAddr,omitempty"`
 	Lookupcontact    *KademliaMessage_LookupContact `protobuf:"group,4,opt,name=LookupContact" json:"lookupcontact,omitempty"`
 	Data             []byte                         `protobuf:"bytes,8,opt,name=data" json:"data,omitempty"`
+	Key              *string                        `protobuf:"bytes,9,opt,name=key" json:"key,omitempty"`
+	Value            *string                        `protobuf:"bytes,10,opt,name=value" json:"value,omitempty"`
 	XXX_unrecognized []byte                         `json:"-"`
 }
 
@@ -68,9 +70,23 @@ func (m *KademliaMessage) GetData() []byte {
 	return nil
 }
 
+func (m *KademliaMessage) GetKey() string {
+	if m != nil && m.Key != nil {
+		return *m.Key
+	}
+	return ""
+}
+
+func (m *KademliaMessage) GetValue() string {
+	if m != nil && m.Value != nil {
+		return *m.Value
+	}
+	return ""
+}
+
 type KademliaMessage_LookupContact struct {
 	Id               *string `protobuf:"bytes,5,req,name=id" json:"id,omitempty"`
-	Address          *string `protobuf:"bytes,6,req,name=address" json:"address,omitempty"`
+	Address          *string `protobuf:"bytes,6,opt,name=address" json:"address,omitempty"`
 	Distance         *string `protobuf:"bytes,7,opt,name=distance" json:"distance,omitempty"`
 	XXX_unrecognized []byte  `json:"-"`
 }

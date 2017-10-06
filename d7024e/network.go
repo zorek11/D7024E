@@ -12,32 +12,41 @@ import (
 )
 
 type Network struct {
-	me          Contact
-	target      *Contact
-	response    [][]Contact
-	temp        *Contact
-	rt          *RoutingTable
-	mtx         sync.Mutex
-	pingResp    bool
-	pingChannel chan bool
+	me        Contact
+	target    *KademliaID
+	response  [][]Contact
+	temp      *Contact
+	rt        *RoutingTable
+	mtx       *sync.Mutex
+	dataFound string
+	pingResp  bool
+	storage   Storage
 }
 
-func NewNetwork(me Contact, rt *RoutingTable) Network {
+func NewNetwork(me Contact, rt *RoutingTable, st Storage) Network {
 	network := Network{}
 	network.me = me
 	network.rt = rt
-	network.pingChannel = make(chan bool)
+	network.mtx = &sync.Mutex{}
+	network.dataFound = ""
+	network.storage = st
 	return network
 }
 
-func (network *Network) AddMessage(c *Contact) {
+func (network *Network) AddMessage(c *KademliaID) {
 	network.mtx.Lock()
 	defer network.mtx.Unlock()
 	network.target = c
 }
 
-func (network *Network) GetTemp() *Contact {
-	return network.temp
+func (network *Network) AddData(s string) {
+	network.mtx.Lock()
+	defer network.mtx.Unlock()
+	network.dataFound = s
+}
+
+func (network *Network) GetData() string {
+	return network.dataFound
 }
 
 /*func (network *Network) GetKademlia() *Kademlia {
@@ -60,9 +69,6 @@ func (network *Network) RemoveFirstResponse() {
 
 func (network *Network) GetResponse() [][]Contact {
 	return network.response
-}
-func (network *Network) AddTempResponse(c *Contact) {
-	network.temp = c
 }
 
 func (network *Network) Listen(me Contact) {
@@ -126,8 +132,7 @@ func (network *Network) SendFindContactMessage(contact *Contact) {
 		Senderid:   proto.String(network.me.ID.String()),
 		SenderAddr: proto.String(network.me.Address),
 		Lookupcontact: &protobuf.KademliaMessage_LookupContact{
-			Id:      proto.String(network.target.ID.String()),
-			Address: proto.String(network.target.Address),
+			Id: proto.String(network.target.String()),
 		},
 	}
 
@@ -149,14 +154,36 @@ func (network *Network) SendFindContactMessage(contact *Contact) {
 }
 
 func (network *Network) SendFindDataMessage(hash string) {
-	// TODO
+	//TODO
+
 }
 
-func (network *Network) SendStoreMessage(data []byte) {
-	// TODO
+func (network *Network) SendStoreMessage(contact *Contact, key *KademliaID, value string) {
+
+	message := &protobuf.KademliaMessage{
+		Label:      proto.String("StoreData"),
+		Senderid:   proto.String(network.me.ID.String()),
+		SenderAddr: proto.String(network.me.Address),
+		Key:        proto.String(key.String()),
+		Value:      proto.String(value),
+	}
+	data, err := proto.Marshal(message)
+	if err != nil {
+		fmt.Println("Marshal Error: ", err)
+	}
+	Conn, err := net.Dial("udp", contact.Address)
+	if err != nil {
+		fmt.Println("UDP-Error: ", err)
+	}
+	defer Conn.Close()
+
+	_, err = Conn.Write(data)
+	if err != nil {
+		fmt.Println("Write Error: ", err)
+	}
 }
 
-func (network *Network) updateRoutingtable(contact *Contact) {
+func (network *Network) updateRoutingtable(contact Contact) {
 	network.mtx.Lock()
 	defer network.mtx.Unlock()
 	bucket := network.rt.buckets[network.rt.getBucketIndex(contact.ID)]
@@ -177,7 +204,7 @@ func (network *Network) updateRoutingtable(contact *Contact) {
 			go network.SendPingMessage(&lastContact)
 			if !network.pingResp { //if I have no resonse add delete contact and add new
 				bucket.RemoveContact(lastContact)
-				bucket.AddContact(*contact)
+				bucket.AddContact(contact)
 			}
 		}
 	} else { //if I have the element move it to front

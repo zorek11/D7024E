@@ -1,7 +1,8 @@
 package main
 
 import (
-	kademlia "D7024E/d7024e"
+	kademlia "D7024E-Kademlia/d7024e"
+	"fmt"
 	//"fmt"
 )
 
@@ -110,7 +111,7 @@ func main() {
 
 	net6 := kad6.GetNetwork()
 
-	//net7 := kad7.GetNetwork()
+	net7 := kad7.GetNetwork()
 
 	go net1.Listen(me)
 	go net2.Listen(contact2)
@@ -118,10 +119,11 @@ func main() {
 	go net4.Listen(contact4)
 	go net5.Listen(contact5)
 	go net6.Listen(contact6)
-	//go net7.Listen(contact7)
+	go net7.Listen(contact7)
 	// go net1.SendPingMessage(&contact2)
 	//net1.AddMessage(&contact2)
 	//go kad1.LookupContact(&contact7)
+	//go kad1.Store("aids")
 
 	//go net1.SendFindContactMessage(&contact2)
 	for i := 0; i < 2; i++ {
@@ -138,12 +140,12 @@ func main() {
 			fmt.Println(contacts[i].String())
 		}
 	*/
-	/*for {
+	for {
 		if kad1.GetFound() != false {
 			fmt.Println("END")
 			break
 		}
-	}*/
+	}
 	for {
 	}
 }
