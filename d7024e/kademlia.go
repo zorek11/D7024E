@@ -35,12 +35,13 @@ func NewKademlia(self Contact) (kademlia *Kademlia) {
 	return kademlia
 }
 
-func (kademlia *Kademlia) LookupContact(target *Contact) {
+func (kademlia *Kademlia) LookupContact(t *Contact) {
+	target := t.ID
 	kademlia.nt.AddMessage(target)
-	contacts := kademlia.nt.rt.FindClosestContacts(target.ID, count)
+	contacts := kademlia.nt.rt.FindClosestContacts(target, count)
 	//thisalpha := alpha % (len(contacts) + 1)
 	fmt.Println(len(contacts))
-	if contacts[0].ID == target.ID {
+	if contacts[0].ID == target {
 		//return &contacts[0]
 		fmt.Println("Target found: " + target.String())
 		fmt.Println("With address: " + contacts[0].String())
@@ -55,8 +56,8 @@ func (kademlia *Kademlia) LookupContact(target *Contact) {
 		if len(kademlia.GetNetwork().GetResponse()) > 0 {
 			//fmt.Println("Response in kademlia: ", kademlia.GetNetwork().GetResponse())
 			//if kademlia.GetNetwork().GetResponse()[0] != nil {
-			temp := kademlia.GetNetwork().GetResponse()[0]
-			if temp[0].ID.String() == target.ID.String() {
+			temp := kademlia.GetNetwork().GetResponse()[0].contacts
+			if temp[0].ID.String() == target.String() {
 				fmt.Println("This is the correct ID String: " + temp[0].ID.String())
 				kademlia.found = true
 				return
@@ -82,50 +83,58 @@ func (kademlia *Kademlia) LookupContact(target *Contact) {
 }
 
 func (kademlia *Kademlia) LookupData(hash string) {
-	/*
-		target := NewKademliaID(hash)
 
-		kademlia.nt.AddMessage(target)
-		contacts := kademlia.nt.rt.FindClosestContacts(target.ID, count)
-		fmt.Println(len(contacts))
-		if contacts[0].ID == target.ID {
-			fmt.Println("Target found: " + target.String())
-			fmt.Println("With address: " + contacts[0].String())
+	target := NewKademliaID(hash)
+	/*
+		if kademlia.network.RetrieveFile(target)RetrieveFile{
+			fmt.Println("located in local hash")
 			return
 		}
+	*/
 
-		//tempnetwork := NewNetwork(nt.rt, kademlia)
+	kademlia.nt.AddMessage(target)
+	contacts := kademlia.nt.rt.FindClosestContacts(target, count)
+	fmt.Println(len(contacts))
+	if contacts[0].ID == target {
+		fmt.Println("Target found: " + target.String())
+		fmt.Println("With address: " + contacts[0].String())
+		return
+	}
 
-		go kademlia.nt.SendFindContactMessage(&contacts[0])
-		//}
-		for {
-			if len(kademlia.GetNetwork().GetResponse()) > 0 {
-				//fmt.Println("Response in kademlia: ", kademlia.GetNetwork().GetResponse())
-				//if kademlia.GetNetwork().GetResponse()[0] != nil {
-				temp := kademlia.GetNetwork().GetResponse()[0]
-				if temp[0].ID.String() == target.ID.String() {
-					fmt.Println("This is the correct ID String: " + temp[0].ID.String())
-					kademlia.found = true
-					return
-				} else {
+	//tempnetwork := NewNetwork(nt.rt, kademlia)
 
-					for i := 0; i < alpha; i++ {
-						if i >= len(temp) {
-							break
-						}
-						//fmt.Println("This is the new: ", temp[i])
-						go kademlia.nt.SendFindContactMessage(&temp[i])
+	go kademlia.nt.SendFindContactMessage(&contacts[0])
+	//}
+	for {
+		if len(kademlia.GetNetwork().GetResponse()) > 0 {
+			//fmt.Println("Response in kademlia: ", kademlia.GetNetwork().GetResponse())
+			//if kademlia.GetNetwork().GetResponse()[0] != nil {
+			temp := kademlia.GetNetwork().GetResponse()[0]
 
+			if temp[0].ID.String() == target.String() {
+
+				fmt.Println("This is the correct ID String: " + temp[0].ID.String())
+				kademlia.found = true
+				return
+
+			} else {
+
+				for i := 0; i < alpha; i++ {
+					if i >= len(temp) {
+						break
 					}
-
-					kademlia.nt.RemoveFirstResponse()
+					//fmt.Println("This is the new: ", temp[i])
+					go kademlia.nt.SendFindContactMessage(&temp[i])
 
 				}
-				//}
+
+				kademlia.nt.RemoveFirstResponse()
 
 			}
+			//}
+
 		}
-	*/
+	}
 }
 
 func (kademlia *Kademlia) Store(data []byte) {

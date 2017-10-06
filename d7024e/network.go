@@ -12,12 +12,24 @@ import (
 
 type Network struct {
 	me       Contact
-	target   *Contact
-	response [][]Contact
+	target   *KademliaID
+	response []Response
 	temp     *Contact
 	rt       *RoutingTable
 	mtx      *sync.Mutex
 	pingResp bool
+}
+
+type Response struct {
+	contacts []Contact
+	flags    []bool
+}
+
+func NewResponse(c []Contact, f []bool) Response {
+	response := Response{}
+	response.contacts = c
+	response.flags = f
+	return response
 }
 
 func NewNetwork(me Contact, rt *RoutingTable) Network {
@@ -28,24 +40,16 @@ func NewNetwork(me Contact, rt *RoutingTable) Network {
 	return network
 }
 
-func (network *Network) AddMessage(c *Contact) {
+func (network *Network) AddMessage(c *KademliaID) {
 	network.mtx.Lock()
 	defer network.mtx.Unlock()
 	network.target = c
 }
 
-func (network *Network) GetTemp() *Contact {
-	return network.temp
-}
-
-/*func (network *Network) GetKademlia() *Kademlia {
-	return network.kademlia
-}*/
-
-func (network *Network) AddResponse(c []Contact) {
+func (network *Network) AddResponse(c []Contact, b []bool) {
 	network.mtx.Lock()
 	defer network.mtx.Unlock()
-	network.response = append(network.response, [][]Contact{c}...)
+	network.response = append(network.response, []Response{NewResponse(c, b)}...)
 	fmt.Println("\nResponse: ", network.response)
 }
 
@@ -56,7 +60,7 @@ func (network *Network) RemoveFirstResponse() {
 	network.response = network.response[1:]
 }
 
-func (network *Network) GetResponse() [][]Contact {
+func (network *Network) GetResponse() []Response {
 	return network.response
 }
 
@@ -120,8 +124,7 @@ func (network *Network) SendFindContactMessage(contact *Contact) {
 		Senderid:   proto.String(network.me.ID.String()),
 		SenderAddr: proto.String(network.me.Address),
 		Lookupcontact: &protobuf.KademliaMessage_LookupContact{
-			Id:      proto.String(network.target.ID.String()),
-			Address: proto.String(network.target.Address),
+			Id: proto.String(network.target.ID.String()),
 		},
 	}
 
