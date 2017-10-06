@@ -16,7 +16,7 @@ type Network struct {
 	response [][]Contact
 	temp     *Contact
 	rt       *RoutingTable
-	mtx      sync.Mutex
+	mtx      *sync.Mutex
 	pingResp bool
 }
 
@@ -24,6 +24,7 @@ func NewNetwork(me Contact, rt *RoutingTable) Network {
 	network := Network{}
 	network.me = me
 	network.rt = rt
+	network.mtx = &sync.Mutex{}
 	return network
 }
 
@@ -57,9 +58,6 @@ func (network *Network) RemoveFirstResponse() {
 
 func (network *Network) GetResponse() [][]Contact {
 	return network.response
-}
-func (network *Network) AddTempResponse(c *Contact) {
-	network.temp = c
 }
 
 func (network *Network) Listen(me Contact) {
