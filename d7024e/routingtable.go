@@ -61,3 +61,11 @@ func (routingTable *RoutingTable) getBucketIndex(id *KademliaID) int {
 
 	return IDLength*8 - 1
 }
+
+func (routingTable *RoutingTable) updateRoutingTable(contact *Contact) {
+	bucket := routingTable.buckets[routingTable.getBucketIndex(contact.ID)]
+	if bucket.ContactinBucket(*contact) {
+		bucket.RemoveContact(*contact)
+		bucket.AddContact(*contact)
+	}
+}

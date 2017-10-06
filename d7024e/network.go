@@ -4,39 +4,76 @@ import (
 	"D7024E-Kademlia/protobuf"
 	"fmt"
 	"net"
-	"crypto/sha1"
-	"io"
+	"sync"
+	"time"
 
 	"github.com/golang/protobuf/proto"
 )
 
 type Network struct {
-	me       Contact
-	target   *Contact
-	response *Contact
-	kademlia *Kademlia
+	me        Contact
+	target    *KademliaID
+	response  [][]Contact
+	temp      *Contact
+	rt        *RoutingTable
+	mtx       *sync.Mutex
+	dataFound string
+	pingResp  bool
 }
 
-func NewNetwork(me Contact, kad *Kademlia) *Network {
-	net := &Network{}
-	net.me = me
-	net.kademlia = kad
-	return net
+func NewNetwork(me Contact, rt *RoutingTable) Network {
+	network := Network{}
+	network.me = me
+	network.rt = rt
+	network.mtx = &sync.Mutex{}
+	network.dataFound = ""
+	return network
 }
 
-func (network *Network) AddMessage(c *Contact) {
+func (network *Network) AddMessage(c *KademliaID) {
+	network.mtx.Lock()
+	defer network.mtx.Unlock()
 	network.target = c
 }
 
-func (network *Network) AddResponse(c *Contact) {
-	network.response = c
+func (network *Network) AddData(s string) {
+	network.mtx.Lock()
+	defer network.mtx.Unlock()
+	network.dataFound = s
 }
 
-func Listen(me Contact) {
+func (network *Network) GetData() string {
+	return network.dataFound
+}
+
+/*func (network *Network) GetKademlia() *Kademlia {
+	return network.kademlia
+}*/
+
+func (network *Network) AddResponse(c []Contact) {
+	network.mtx.Lock()
+	defer network.mtx.Unlock()
+	network.response = append(network.response, [][]Contact{c}...)
+	fmt.Println("\nResponse: ", network.response)
+}
+
+func (network *Network) RemoveFirstResponse() {
+
+	network.mtx.Lock()
+	defer network.mtx.Unlock()
+	network.response = network.response[1:]
+}
+
+func (network *Network) GetResponse() [][]Contact {
+	return network.response
+}
+
+func (network *Network) Listen(me Contact) {
+	messagehandler := NewMessageHandler(network)
 	Addr, err1 := net.ResolveUDPAddr("udp", me.Address)
 	Conn, err2 := net.ListenUDP("udp", Addr)
 	if (err1 != nil) || (err2 != nil) {
-		fmt.Println("Connection Error: ", err1, "\n", err2)
+		fmt.Println("Connection Error Listen: ", err1, "\n", err2)
 	}
 	//read connection
 	defer Conn.Close()
@@ -44,10 +81,11 @@ func Listen(me Contact) {
 	channel := make(chan []byte)
 	buf := make([]byte, 1024)
 	for {
-		go handleMessage(channel, me)
-		_, _, err := Conn.ReadFromUDP(buf)
-		//fmt.Print("Connection recived: ", UDPaddr)
-		channel <- buf
+		go messagehandler.handleMessage(channel, me, network)
+		n, _, err := Conn.ReadFromUDP(buf)
+		channel <- buf[0:n]
+		//fmt.Println("Connection recived: ", string(buf[0:n]), " \nfrom ", addr)
+
 		if err != nil {
 			fmt.Println("Read Error: ", err)
 		}
@@ -55,7 +93,13 @@ func Listen(me Contact) {
 }
 
 func (network *Network) SendPingMessage(contact *Contact) {
-	message := buildMessage("ping", network.me.ID.String(), network.me.Address)
+	fmt.Println("KUK")
+	network.mtx.Lock()
+	defer network.mtx.Unlock()
+	//build and send ping message
+
+	network.pingResp = false
+	message := buildMessage([]string{"ping", network.me.ID.String(), network.me.Address})
 	data, err := proto.Marshal(message)
 	if err != nil {
 		fmt.Println("Marshal Error: ", err)
@@ -65,20 +109,29 @@ func (network *Network) SendPingMessage(contact *Contact) {
 		fmt.Println("UDP-Error: ", err)
 	}
 	defer Conn.Close()
-
 	_, err = Conn.Write(data)
 	if err != nil {
 		fmt.Println("Write Error: ", err)
+	}
+	//wait for timeout (2sec)
+	time.Sleep(time.Second * 2)
+	if network.pingResp {
+		fmt.Println("Contact alive:", contact.Address)
+	} else {
+		fmt.Println("Contact dead:", contact.Address)
 	}
 }
 
 func (network *Network) SendFindContactMessage(contact *Contact) {
 	message := &protobuf.KademliaMessage{
-		Label:         proto.String("LookupContact"),
-		Senderid:      proto.String(network.me.ID.String()),
-		SenderAddr:    proto.String(network.me.Address),
-		LookupContact: proto.String(network.target.String()),
+		Label:      proto.String("LookupContact"),
+		Senderid:   proto.String(network.me.ID.String()),
+		SenderAddr: proto.String(network.me.Address),
+		Lookupcontact: &protobuf.KademliaMessage_LookupContact{
+			Id: proto.String(network.target.String()),
+		},
 	}
+
 	data, err := proto.Marshal(message)
 	if err != nil {
 		fmt.Println("Marshal Error: ", err)
@@ -93,6 +146,7 @@ func (network *Network) SendFindContactMessage(contact *Contact) {
 	if err != nil {
 		fmt.Println("Write Error: ", err)
 	}
+
 }
 
 func (network *Network) SendFindDataMessage(hash string) {
