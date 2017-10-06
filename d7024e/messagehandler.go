@@ -104,7 +104,8 @@ func (this *MessageHandler) handleMessage(channel chan []byte, me Contact, netwo
 		fmt.Print("\n", message)
 
 	case "StoreData":
-		kademlia.Store(message.Key, message.Value, me.ID)
+		key := newKademliaID(message.Key)
+		network.storage.StoreFile(key, message.Value, message.Senderid)
 
 	default:
 		fmt.Println("PANIC in switch")

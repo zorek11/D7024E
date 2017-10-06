@@ -31,7 +31,7 @@ func (kademlia *Kademlia) GetNetwork() *Network {
 
 func NewKademlia(self Contact) (kademlia *Kademlia) {
 	kademlia = new(Kademlia)
-	kademlia.nt = NewNetwork(self, NewRoutingTable(self))
+	kademlia.nt = NewNetwork(self, NewRoutingTable(self), NewStorage())
 	kademlia.found = false
 	return kademlia
 }
@@ -123,10 +123,19 @@ func (kademlia *Kademlia) LookupContact(target *Contact) {
 func (kademlia *Kademlia) LookupData(hash string) {
 }
 
-func (kademlia *Kademlia) Store(data []byte) {
-	storage.StoreFile(key, value, publisher)
-}
+func (kademlia *Kademlia) Store(data string) {
+	hash := sha1.new()
+	io.WriteString(h, data)
+	tempkey := h.Sum(nil)
 
+	key := newKademliaID(tempkey)
+	
+	contacts := kademlia.rt.FindClosestContacts(key, count)
+
+	for j, contact := range contacts {
+		go SendStoreMessage(&contacts[j], key, data)
+	}
+}
 /*
 func getNewNetworks(kademlia *Kademlia, contacts []Contact, alpha int, target *Contact) []*Network {
 	networks := make([]*Network, alpha)

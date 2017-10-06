@@ -15,12 +15,14 @@ type Network struct {
 	response [][]Contact
 	temp     *Contact
 	rt       *RoutingTable
+	storage  *Storage
 }
 
-func NewNetwork(me Contact, rt *RoutingTable) Network {
+func NewNetwork(me Contact, rt *RoutingTable, st *Storage) Network {
 	network := Network{}
 	network.me = me
 	network.rt = rt
+	network.storage = st
 	return network
 }
 
@@ -140,29 +142,20 @@ func (network *Network) SendFindDataMessage(hash string) {
 	// TODO
 }
 
-func (network *Network) SendStoreMessage(data []byte) {
-	hash := sha1.new()
-	io.WriteString(h, data)
-	key := h.Sum(nil)
-	//TODO: implement below if byte array and not string. For final solution.
-	//	data := []byte("This page intentionally left blank.")
-	//fmt.Printf("% x", sha1.Sum(data))
+func (network *Network) SendStoreMessage(contact *Contact, key *KademliaID, data string) {
 
 	message := &protobuf.KademliaMessage{
 		Label:         proto.String("StoreData"),
 		Senderid:      proto.String(network.me.ID.String()),
 		SenderAddr:    proto.String(network.me.Address),
-		Key: proto.String(key),
-		Value: prot.String(data)
+		Key: proto.String(key.String()),
+		Value: prot.String(data),
 	}
-	contacts := kademlia.rt.FindClosestContacts(network.me.ID, count)
-
-	for j, contact := range contacts {
 		data, err := proto.Marshal(message)
 		if err != nil {
 			fmt.Println("Marshal Error: ", err)
 		}
-		Conn, err := net.Dial("udp", contacts[j].Address)
+		Conn, err := net.Dial("udp", contact.Address)
 		if err != nil {
 			fmt.Println("UDP-Error: ", err)
 		}

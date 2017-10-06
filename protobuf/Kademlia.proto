@@ -11,6 +11,8 @@ message KademliaMessage {
 		optional string distance = 7;
 	}
 	optional bytes data = 8;
+	optional string key = 9;
+	optional string value = 10;
 }
 
 //protoc --go_out=. Kademlia.proto

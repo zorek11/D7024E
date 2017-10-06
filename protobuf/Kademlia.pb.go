@@ -2,22 +2,15 @@
 // source: Kademlia.proto
 // DO NOT EDIT!
 
-/*
-Package protobuf is a generated protocol buffer package.
-
-It is generated from these files:
-	Kademlia.proto
-
-It has these top-level messages:
-	KademliaMessage
-*/
 package protobuf
 
 import proto "github.com/golang/protobuf/proto"
+import json "encoding/json"
 import math "math"
 
-// Reference imports to suppress errors if they are not otherwise used.
+// Reference proto, json, and math imports to suppress error if they are not otherwise used.
 var _ = proto.Marshal
+var _ = &json.SyntaxError{}
 var _ = math.Inf
 
 type KademliaMessage struct {
@@ -26,6 +19,8 @@ type KademliaMessage struct {
 	SenderAddr       *string                        `protobuf:"bytes,3,req,name=senderAddr" json:"senderAddr,omitempty"`
 	Lookupcontact    *KademliaMessage_LookupContact `protobuf:"group,4,opt,name=LookupContact" json:"lookupcontact,omitempty"`
 	Data             []byte                         `protobuf:"bytes,8,opt,name=data" json:"data,omitempty"`
+	Key              *string                        `protobuf:"bytes,9,opt,name=key" json:"key,omitempty"`
+	Value            *string                        `protobuf:"bytes,10,opt,name=value" json:"value,omitempty"`
 	XXX_unrecognized []byte                         `json:"-"`
 }
 
@@ -66,6 +61,20 @@ func (m *KademliaMessage) GetData() []byte {
 		return m.Data
 	}
 	return nil
+}
+
+func (m *KademliaMessage) GetKey() string {
+	if m != nil && m.Key != nil {
+		return *m.Key
+	}
+	return ""
+}
+
+func (m *KademliaMessage) GetValue() string {
+	if m != nil && m.Value != nil {
+		return *m.Value
+	}
+	return ""
 }
 
 type KademliaMessage_LookupContact struct {
