@@ -109,8 +109,8 @@ func (this *MessageHandler) handleMessage(channel chan []byte, me Contact, netwo
 		value := *(message.Value)
 		senderid := *(message.Senderid)
 		network.storage.StoreFile(key, value, senderid)
-		network.storage.RetrieveFile(key)
-		fmt.Println(network.storage.RetrieveFile(key))
+		//network.storage.RetrieveFile(key)
+		//fmt.Println(network.storage.RetrieveFile(key))
 
 	default:
 		fmt.Println("PANIC in switch")

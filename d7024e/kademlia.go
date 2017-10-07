@@ -1,8 +1,8 @@
 package d7024e
 
 import (
-	"fmt"
 	"crypto/sha1"
+	"fmt"
 )
 
 const count = 20
@@ -87,18 +87,19 @@ func (kademlia *Kademlia) LookupContact(target *Contact) {
 }
 
 func (kademlia *Kademlia) LookupData(hash string) {
+	target := KademliaID(sha1.Sum([]byte(hash)))
+	//fmt.Println(kademlia.nt.storage.RetrieveFile(&target))
 
-	target := NewKademliaID(hash)
-
-	kademlia.nt.AddMessage(target)
-	contacts := kademlia.nt.rt.FindClosestContacts(target, count)
-	fmt.Println(len(contacts))
-	if contacts[0].ID == target {
-		//TODO change to check local hash
-		fmt.Println("Target found: " + target.String())
-		fmt.Println("With address: " + contacts[0].String())
+	if len(kademlia.nt.storage.RetrieveFile(&target)) > 0 {
+		fmt.Println("File found locally: " + target.String())
 		return
 	}
+	for {
+
+	}
+	kademlia.nt.AddMessage(&target)
+	contacts := kademlia.nt.rt.FindClosestContacts(&target, count)
+	fmt.Println(len(contacts))
 
 	//tempnetwork := NewNetwork(nt.rt, kademlia)
 

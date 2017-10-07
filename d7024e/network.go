@@ -19,7 +19,7 @@ type Network struct {
 	mtx       *sync.Mutex
 	dataFound string
 	pingResp  bool
-	storage  Storage
+	storage   Storage
 }
 
 func NewNetwork(me Contact, rt *RoutingTable, st Storage) Network {
@@ -68,6 +68,10 @@ func (network *Network) RemoveFirstResponse() {
 
 func (network *Network) GetResponse() [][]Contact {
 	return network.response
+}
+
+func (network *Network) GetStorage() *Storage {
+	return &network.storage
 }
 
 func (network *Network) Listen(me Contact) {
@@ -152,31 +156,31 @@ func (network *Network) SendFindContactMessage(contact *Contact) {
 }
 
 func (network *Network) SendFindDataMessage(hash string) {
-		//TODO
+	//TODO
 
 }
 
 func (network *Network) SendStoreMessage(contact *Contact, key *KademliaID, value string) {
 
 	message := &protobuf.KademliaMessage{
-		Label:         proto.String("StoreData"),
-		Senderid:      proto.String(network.me.ID.String()),
-		SenderAddr:    proto.String(network.me.Address),
-		Key: proto.String(key.String()),
-		Value: proto.String(value),
+		Label:      proto.String("StoreData"),
+		Senderid:   proto.String(network.me.ID.String()),
+		SenderAddr: proto.String(network.me.Address),
+		Key:        proto.String(key.String()),
+		Value:      proto.String(value),
 	}
-		data, err := proto.Marshal(message)
-		if err != nil {
-			fmt.Println("Marshal Error: ", err)
-		}
-		Conn, err := net.Dial("udp", contact.Address)
-		if err != nil {
-			fmt.Println("UDP-Error: ", err)
-		}
-		defer Conn.Close()
+	data, err := proto.Marshal(message)
+	if err != nil {
+		fmt.Println("Marshal Error: ", err)
+	}
+	Conn, err := net.Dial("udp", contact.Address)
+	if err != nil {
+		fmt.Println("UDP-Error: ", err)
+	}
+	defer Conn.Close()
 
-		_, err = Conn.Write(data)
-		if err != nil {
-			fmt.Println("Write Error: ", err)
-		}
+	_, err = Conn.Write(data)
+	if err != nil {
+		fmt.Println("Write Error: ", err)
+	}
 }
