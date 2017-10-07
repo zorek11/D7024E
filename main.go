@@ -124,17 +124,18 @@ func main() {
 	// go net1.SendPingMessage(&contact2)
 	//net1.AddMessage(&contact2)
 	//go kad1.LookupContact(&contact7)
-	str := "penor"
+	str := "aids in the face"
 	hash := kademlia.KademliaID(sha1.Sum([]byte(str)))
+	fmt.Println(hash.String() + "\n")
 	kad1.GetNetwork().GetStorage().StoreFile(&hash, str, me.ID.String())
-	//kad1.GetNetwork().GetStorage().RetrieveFile(&hash)
-	go kad1.LookupData(str)
+	fmt.Println(kad1.GetNetwork().GetStorage().RetrieveFile(&hash))
+	kad1.LookupData(str)
 
 	//go net1.SendFindContactMessage(&contact2)
-	for i := 0; i < 2; i++ {
-		go net1.SendPingMessage(&contact2)
-		go net1.SendPingMessage(&contact7)
-	}
+	//for i := 0; i < 2; i++ {
+		//go net1.SendPingMessage(&contact2)
+		//go net1.SendPingMessage(&contact7)
+	//}
 	/*
 		//rt := kademlia.NewRoutingTable(kademlia.NewContact(kademlia.NewKademliaID("FFFFFFFF00000000000000000000000000000000"), "localhost:8000"))
 		for i := 1; i < 10; i++ {

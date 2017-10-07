@@ -88,9 +88,9 @@ func (kademlia *Kademlia) LookupContact(target *Contact) {
 
 func (kademlia *Kademlia) LookupData(hash string) {
 	target := KademliaID(sha1.Sum([]byte(hash)))
-	//fmt.Println(kademlia.nt.storage.RetrieveFile(&target))
 
 	if len(kademlia.nt.storage.RetrieveFile(&target)) > 0 {
+		fmt.Println("File: " + kademlia.nt.storage.RetrieveFile(&target))
 		fmt.Println("File found locally: " + target.String())
 		return
 	}
