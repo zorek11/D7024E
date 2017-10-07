@@ -90,8 +90,8 @@ func (kademlia *Kademlia) LookupData(hash string) {
 	target := KademliaID(sha1.Sum([]byte(hash)))
 
 	if len(kademlia.nt.storage.RetrieveFile(&target)) > 0 {
-		fmt.Println("File: " + kademlia.nt.storage.RetrieveFile(&target))
-		fmt.Println("File found locally: " + target.String())
+		fmt.Println("File retrieved in LookupData: " + kademlia.nt.storage.RetrieveFile(&target))
+		fmt.Println("File found locally in LookupData: " + target.String())
 		return
 	}
 	for {
@@ -143,13 +143,15 @@ func (kademlia *Kademlia) LookupData(hash string) {
 
 }
 
-func (kademlia *Kademlia) Store(data string) {
+func (kademlia *Kademlia) Store(data string) KademliaID {
+	//TODO: LookupContact find 20 closest somehow. This kademlia doesn't know all contacts in network.
 	hashdata := []byte(data)
 	key := KademliaID(sha1.Sum(hashdata))
-
+	//contacts := kademlia.LookupContact(&target) //How it should work
 	contacts := kademlia.nt.rt.FindClosestContacts(&key, count)
 
 	for j := range contacts {
 		go kademlia.nt.SendStoreMessage(&contacts[j], &key, data)
 	}
+	return key
 }
