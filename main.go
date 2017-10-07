@@ -2,6 +2,7 @@ package main
 
 import (
 	kademlia "D7024E-Kademlia/d7024e"
+	"crypto/sha1"
 	"fmt"
 	//"fmt"
 )
@@ -15,17 +16,17 @@ func main() {
 	//contact := kademlia.NewContact(kademlia.NewKademliaID("FFFFFFFFFFF11111111111111111111111111111"),
 	//	"127.0.0.1:1191")
 	contact2 := kademlia.NewContact(kademlia.NewKademliaID("1FFFFFFF11111111111111111111111111111192"),
-		"127.0.0.1:1222")
+		"127.0.0.1:1322")
 	contact3 := kademlia.NewContact(kademlia.NewKademliaID("1FFFFFFF11111111111111111111111111111193"),
-		"127.0.0.1:1223")
+		"127.0.0.1:1323")
 	contact4 := kademlia.NewContact(kademlia.NewKademliaID("1FFFFFFF11111111111111111111111111111194"),
-		"127.0.0.1:1224")
+		"127.0.0.1:1324")
 	contact5 := kademlia.NewContact(kademlia.NewKademliaID("1FFFFFFF11111111111111111111111111111195"),
-		"127.0.0.1:1225")
+		"127.0.0.1:1325")
 	contact6 := kademlia.NewContact(kademlia.NewKademliaID("1FFFFFFF11111111111111111111111111111196"),
-		"127.0.0.1:1226")
+		"127.0.0.1:1326")
 	contact7 := kademlia.NewContact(kademlia.NewKademliaID("1FFFFFFF11111111111111111111111111111197"),
-		"127.0.0.1:1227")
+		"127.0.0.1:1327")
 
 	/*
 		contact8 := kademlia.NewContact(kademlia.NewKademliaID("1FFFFFFF11111111111111111111111111111198"),
@@ -41,7 +42,7 @@ func main() {
 	*/
 
 	me := kademlia.NewContact(kademlia.NewKademliaID("FFFFFFFF00000000000000000000000000000000"),
-		"127.0.0.1:1999")
+		"127.0.0.1:1989")
 
 	//rt := kademlia.NewRoutingTable(me)
 	//rt.AddContact(contact)
@@ -123,7 +124,11 @@ func main() {
 	// go net1.SendPingMessage(&contact2)
 	//net1.AddMessage(&contact2)
 	//go kad1.LookupContact(&contact7)
-	//go kad1.Store("aids")
+	str := "penor"
+	hash := kademlia.KademliaID(sha1.Sum([]byte(str)))
+	kad1.GetNetwork().GetStorage().StoreFile(&hash, str, me.ID.String())
+	//kad1.GetNetwork().GetStorage().RetrieveFile(&hash)
+	go kad1.LookupData(str)
 
 	//go net1.SendFindContactMessage(&contact2)
 	for i := 0; i < 2; i++ {

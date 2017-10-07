@@ -71,6 +71,10 @@ func (network *Network) GetResponse() [][]Contact {
 	return network.response
 }
 
+func (network *Network) GetStorage() *Storage {
+	return &network.storage
+}
+
 func (network *Network) Listen(me Contact) {
 	messagehandler := NewMessageHandler(network)
 	Addr, err1 := net.ResolveUDPAddr("udp", me.Address)
