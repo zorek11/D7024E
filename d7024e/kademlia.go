@@ -86,6 +86,7 @@ func (kademlia *Kademlia) LookupContact(target *Contact) {
 
 }
 
+//TODO: Implement some kind of deletion if timestamp overdue. (PURGE)
 func (kademlia *Kademlia) LookupData(hash string) {
 	target := KademliaID(sha1.Sum([]byte(hash)))
 
@@ -143,6 +144,7 @@ func (kademlia *Kademlia) LookupData(hash string) {
 
 }
 
+//TODO: call Store again after a specific time to store again(REPUBLISH)
 func (kademlia *Kademlia) Store(data string) KademliaID {
 	//TODO: LookupContact find 20 closest somehow. This kademlia doesn't know all contacts in network.
 	hashdata := []byte(data)
