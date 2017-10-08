@@ -18,10 +18,20 @@ func NewStorage() Storage {
 }
 
 func (storage *Storage) StoreFile(key *KademliaID, value string, publisher string) {
-	//fmt.Println(value)
-	storage.publisherht[*key] = publisher
-	storage.valueht[*key] = value
-	//storage.timeht[*key] = t
+	/*if(TIME > 24 hours){
+		if(	storage.publisherht[*key] == publisher){
+			storage.publisherht[*key] = publisher
+			storage.valueht[*key] = value
+			//TODO: TIMESTAMP
+			//storage.timeht[*key] = t
+		}
+	}*/
+	if len(storage.valueht) == 0 {
+		storage.publisherht[*key] = publisher
+		storage.valueht[*key] = value
+		//TODO: TIMESTAMP
+		//storage.timeht[*key] = t
+	}
 }
 func (storage *Storage) DeleteFile(key *KademliaID) {
 	delete(storage.valueht, *key)
