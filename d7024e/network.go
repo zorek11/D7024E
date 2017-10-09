@@ -159,8 +159,14 @@ func (network *Network) SendFindContactMessage(contact *Contact) {
 	send(contact.Address, message)
 }
 
-func (network *Network) SendFindDataMessage(hash string, target *KademliaID) {
-	//TODO
+func (network *Network) SendFindDataMessage(hash string, contact *Contact) {
+	message := &protobuf.KademliaMessage{
+		Label:      proto.String("LookupData"),
+		Senderid:   proto.String(network.me.ID.String()),
+		SenderAddr: proto.String(network.me.Address),
+		Key:        proto.String(hash),
+	}
+	send(contact.Address, message)
 
 }
 

@@ -137,7 +137,7 @@ func (kademlia *Kademlia) LookupData(hash string) {
 			break
 		}
 		result[j] = contacts[j]
-		go kademlia.nt.SendFindDataMessage(hash, contacts[j].ID)
+		go kademlia.nt.SendFindDataMessage(hash, &contacts[j])
 		go kademlia.nt.SendFindContactMessage(&contacts[j])
 	}
 	result = result[0:len(contacts)]
@@ -171,7 +171,7 @@ func (kademlia *Kademlia) LookupData(hash string) {
 					tempAlpha++
 				} else {
 					go kademlia.nt.SendFindContactMessage(&temp[i])
-					go kademlia.nt.SendFindDataMessage(hash, temp[i].ID)
+					go kademlia.nt.SendFindDataMessage(hash, &temp[i])
 				}
 			}
 			result = kademlia.checkContacts(result, temp)
