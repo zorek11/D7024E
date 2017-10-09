@@ -1,5 +1,7 @@
 package d7024e
-
+import (
+	"fmt"
+)
 const bucketSize = 20
 
 type RoutingTable struct {
@@ -60,4 +62,15 @@ func (routingTable *RoutingTable) getBucketIndex(id *KademliaID) int {
 	}
 
 	return IDLength*8 - 1
+}
+
+func (routingTable *RoutingTable) PrintRoutingTable() {
+	for i := 0; i < len(routingTable.buckets); i++ {
+		buckets := routingTable.buckets[i]
+		for e := buckets.list.Front(); e != nil; e = e.Next() {
+			fmt.Printf("%v, %v, %v\n", i, e.Value.(Contact).ID.String(), e.Value.(Contact).Address)
+		}
+	}
+
+	
 }

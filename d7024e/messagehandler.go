@@ -3,9 +3,7 @@ package d7024e
 import (
 	"D7024E-Kademlia/protobuf"
 	"fmt"
-	"net"
 	"strings"
-
 	"github.com/golang/protobuf/proto"
 )
 
@@ -19,45 +17,10 @@ func NewMessageHandler(net *Network) *MessageHandler {
 	return mes
 }
 
-func buildMessage(input []string) *protobuf.KademliaMessage {
-	if input[0] == "ping" || input[0] == "pong" {
-		message := &protobuf.KademliaMessage{
-			Label:      proto.String(input[0]),
-			Senderid:   proto.String(input[1]),
-			SenderAddr: proto.String(input[2]),
-		}
-		return message
-	}
-	if input[0] == "LookupContactResponse" {
-		message := &protobuf.KademliaMessage{
-			Label:      proto.String(input[0]),
-			Senderid:   proto.String(input[1]),
-			SenderAddr: proto.String(input[2]),
-			Lookupcontact: &protobuf.KademliaMessage_LookupContact{
-				Id:      proto.String(input[3]),
-				Address: proto.String(input[4]),
-			},
-		}
-		return message
-	} else {
-		message := &protobuf.KademliaMessage{
-			Label:      proto.String("Error"),
-			Senderid:   proto.String(input[1]),
-			SenderAddr: proto.String(input[2]),
-		}
-		return message
-	}
-}
 
-func parseContacts(input []string) *protobuf.KademliaMessage {
-	message := &protobuf.KademliaMessage{
-		Label:      proto.String("LookupContactResponse"),
-		Senderid:   proto.String(input[0]),
-		SenderAddr: proto.String(input[1]),
-	}
-	return message
-}
-
+/**
+* Messagehandler for a listner. Handles all messages in a switch and takes according actions. 
+*/
 func (this *MessageHandler) handleMessage(channel chan []byte, me *Contact, network *Network) {
 	data := <-channel
 	message := &protobuf.KademliaMessage{}
@@ -65,47 +28,38 @@ func (this *MessageHandler) handleMessage(channel chan []byte, me *Contact, netw
 	if err != nil {
 		fmt.Println(err)
 	}
-	fmt.Println("\n\nListner:", me)
 	sender := NewContact(NewKademliaID(message.GetSenderid()), message.GetSenderAddr())
-	fmt.Println("Sender: ", sender)
-	network.updateRoutingtable(sender)
+	fmt.Println("\n\nListner:", me, "\nSender: ", sender, "\nMessage: ", message)
+	network.UpdateRoutingtable(sender) //update routingtable on all RPCs
 	switch *message.Label {
-	case "ping":
-		fmt.Println("\n", message)
+	case "ping":	
 		response := buildMessage([]string{"pong", me.ID.String(), me.Address})
 		send(message.GetSenderAddr(), response)
 	case "pong":
-		fmt.Print("\n", message)
-		network.pingResp = true
+		pingIndex := IndexInSlice(message.GetSenderAddr(), network.pingList)
+		network.pingList[pingIndex].Response = true
+
 
 	case "LookupContact":
-		fmt.Print("\n", message, "\n\n")
 		id := NewKademliaID(*message.Lookupcontact.Id)
 		temp := network.rt.FindClosestContacts(id, 20) //no recursion
-
-		//==================================
 		r := ""
 		for i := 0; i < len(temp); i++ {
 			r = r + temp[i].String() + "\n"
 		}
-		response := &protobuf.KademliaMessage{
-			Label:      proto.String("LookupContactResponse"),
-			Senderid:   proto.String(me.ID.String()),
-			SenderAddr: proto.String(me.Address),
-			Data:       []byte(r),
-		}
+		response := buildMessage([]string{"LookupContactResponse", me.ID.String(), me.Address, r})
 		send(message.GetSenderAddr(), response)
 
 	case "LookupContactResponse":
-		//response := buildContact(message.Lookupcontact)
 		s := string(message.Data)
-		contactList := unparse(s)
+		contactList := unparseContacts(s)
 		if len(contactList) > 0 {
 			network.AddResponse(contactList)
 		}
 
 	case "LookupData":
-		fmt.Print("\n", message)
+
+	case "LookupDataResponse":
 
 	case "StoreData":
 		key := NewKademliaID(*(message.Key))
@@ -117,28 +71,15 @@ func (this *MessageHandler) handleMessage(channel chan []byte, me *Contact, netw
 
 	default:
 		fmt.Println("PANIC in switch")
-
+		
 	}
 
 }
-func send(Address string, message *protobuf.KademliaMessage) {
-	data, err := proto.Marshal(message)
-	if err != nil {
-		fmt.Println("Marshal Error: ", err)
-	}
 
-	Conn, err := net.Dial("udp", Address)
-	if err != nil {
-		fmt.Println("UDP-Error: ", err)
-	}
-	defer Conn.Close()
-	_, err = Conn.Write(data)
-	if err != nil {
-		fmt.Println("Write Error: ", err)
-	}
-}
-
-func unparse(input string) []Contact {
+/**
+* Takes a string of contacts and parses it to a slice of contacts
+*/
+func unparseContacts(input string) []Contact {
 	var contactList []Contact
 	split := strings.Split(input, "\n")
 	for i := 0; i < len(split)-1; i++ {
@@ -149,6 +90,66 @@ func unparse(input string) []Contact {
 	return contactList
 }
 
+/*
+*/
+func parseContacts(input []string) *protobuf.KademliaMessage {
+	message := &protobuf.KademliaMessage{
+		Label:      proto.String("LookupContactResponse"),
+		Senderid:   proto.String(input[0]),
+		SenderAddr: proto.String(input[1]),
+	}
+	return message
+}
+
 func buildContact(message *protobuf.KademliaMessage_LookupContact) Contact {
 	return NewContact(NewKademliaID(*message.Id), *message.Address)
+}
+
+/**
+* Builds a protobuf message from a input array
+*/ 
+func buildMessage(input []string) *protobuf.KademliaMessage {
+	if input[0] == "ping" || input[0] == "pong" {
+		message := &protobuf.KademliaMessage{
+			Label:      proto.String(input[0]),
+			Senderid:   proto.String(input[1]),
+			SenderAddr: proto.String(input[2]),
+		}
+		return message
+	}
+	if input[0] == "LookupContact" {
+		message := &protobuf.KademliaMessage{
+			Label:      proto.String(input[0]),
+			Senderid:   proto.String(input[1]),
+			SenderAddr: proto.String(input[2]),
+			Data:       []byte(input[3]),
+		}
+		return message
+	}
+	if input[0] == "LookupContactResponse" {
+		message := &protobuf.KademliaMessage{
+			Label:      proto.String(input[0]),
+			Senderid:   proto.String(input[1]),
+			SenderAddr: proto.String(input[2]),
+			Data:       []byte(input[3]),
+		}
+		return message
+	}
+	if input[0] == "StoreData" {
+		message := &protobuf.KademliaMessage{
+			Label:      proto.String(input[0]),
+			Senderid:   proto.String(input[1]),
+			SenderAddr: proto.String(input[2]),
+			Key:        proto.String(input[3]),
+			Value:      proto.String(input[4]),
+		}
+		return message
+	} else {
+		message := &protobuf.KademliaMessage{
+			Label:      proto.String("Error"),
+			Senderid:   proto.String(input[1]),
+			SenderAddr: proto.String(input[2]),
+		}
+		return message
+	}
 }
