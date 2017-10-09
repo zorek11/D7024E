@@ -19,8 +19,15 @@ type Network struct {
 	rt        *RoutingTable
 	mtx       *sync.Mutex
 	dataFound string
-	pingResp  bool
+	pingResp  bool	
+	pingList []Ping
 	storage   Storage
+}
+
+type Ping struct {
+	Address string
+	Response bool
+	Done chan bool
 }
 
 func NewNetwork(me Contact, rt *RoutingTable, st Storage) Network {
@@ -48,10 +55,6 @@ func (network *Network) AddData(s string) {
 func (network *Network) GetData() string {
 	return network.dataFound
 }
-
-/*func (network *Network) GetKademlia() *Kademlia {
-	return network.kademlia
-}*/
 
 func (network *Network) AddResponse(c []Contact) {
 	network.mtx.Lock()
@@ -95,10 +98,25 @@ func (network *Network) Listen(me Contact) {
 	}
 }
 
+func IndexInSlice(Address string, list []Ping) int {
+	i := 0;
+    for _, x := range list {
+        if x.Address == Address {
+            return i
+		}
+		i++
+    }
+    return -1
+}
+
 func (network *Network) SendPingMessage(contact *Contact) {
-	network.mtx.Lock()
-	defer network.mtx.Unlock()
 	//build and send ping message
+	pingIndex := IndexInSlice(contact.Address, network.pingList)
+	if pingIndex > -1 { //if address in list
+		<- network.pingList[pingIndex].Done //wait for previous ping to finsh
+		network.pingList = append(network.pingList[:pingIndex], network.pingList[pingIndex+1:]...)//delete contact from list
+	}
+	network.pingList = append(network.pingList, Ping{contact.Address, false, make(chan bool, 1)}) //add to pingList
 
 	network.pingResp = false
 	message := buildMessage([]string{"ping", network.me.ID.String(), network.me.Address})
@@ -117,12 +135,12 @@ func (network *Network) SendPingMessage(contact *Contact) {
 	}
 	//wait for timeout (2sec)
 	time.Sleep(time.Second * 2)
-	if network.pingResp {
-		fmt.Println("Contact alive:", contact.Address)
-		//network.pingChannel <- true
+	pingIndex = IndexInSlice(contact.Address, network.pingList)
+	if network.pingList[pingIndex].Response {
+	//if network.pingResp {
+		fmt.Println("\nContact alive:", contact.Address)
 	} else {
-		fmt.Println("Contact dead:", contact.Address)
-		//network.pingChannel <- false
+		fmt.Println("\nContact dead:", contact.Address)
 	}
 }
 
@@ -183,6 +201,9 @@ func (network *Network) SendStoreMessage(contact *Contact, key *KademliaID, valu
 	}
 }
 
+
+/**
+*/
 func (network *Network) updateRoutingtable(contact Contact) {
 	network.mtx.Lock()
 	defer network.mtx.Unlock()
@@ -201,7 +222,7 @@ func (network *Network) updateRoutingtable(contact Contact) {
 			bucket.list.PushFront(contact)
 		} else {
 			lastContact := bucket.list.Back().Value.(Contact)
-			go network.SendPingMessage(&lastContact)
+			network.SendPingMessage(&lastContact)
 			if !network.pingResp { //if I have no resonse add delete contact and add new
 				bucket.RemoveContact(lastContact)
 				bucket.AddContact(contact)

@@ -105,9 +105,13 @@ func (this *MessageHandler) handleMessage(channel chan []byte, me *Contact, netw
 		}
 
 	case "LookupData":
-		fmt.Print("\n", message)
+		fmt.Print("\n", message, "\n\n")
+
+	case "LookupDataResponse":
+		fmt.Print("\n", message, "\n\n")
 
 	case "StoreData":
+		fmt.Print("\n", message, "\n\n")
 		key := NewKademliaID(*(message.Key))
 		value := *(message.Value)
 		senderid := *(message.Senderid)

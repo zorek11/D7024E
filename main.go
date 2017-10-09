@@ -3,17 +3,14 @@ package main
 import (
 	kademlia "D7024E-Kademlia/d7024e"
 	"fmt"
-	//"fmt"
+	"strconv"
 )
 
 //export GOPATH=$HOME/go
 func main() {
-	//var mutex = &sync.Mutex{}
-	//mutex.Lock()
-	//defer mutex.Unlock()
 
-	//contact := kademlia.NewContact(kademlia.NewKademliaID("FFFFFFFFFFF11111111111111111111111111111"),
-	//	"127.0.0.1:1191")
+	//contact1 := kademlia.NewContact(kademlia.NewKademliaID("1FFFFFFFFFF11111111111111111111111111191"),
+	//	"127.0.0.1:1221")
 	contact2 := kademlia.NewContact(kademlia.NewKademliaID("1FFFFFFF11111111111111111111111111111192"),
 		"127.0.0.1:1222")
 	contact3 := kademlia.NewContact(kademlia.NewKademliaID("1FFFFFFF11111111111111111111111111111193"),
@@ -26,7 +23,6 @@ func main() {
 		"127.0.0.1:1226")
 	contact7 := kademlia.NewContact(kademlia.NewKademliaID("1FFFFFFF11111111111111111111111111111197"),
 		"127.0.0.1:1227")
-
 	/*
 		contact8 := kademlia.NewContact(kademlia.NewKademliaID("1FFFFFFF11111111111111111111111111111198"),
 			"127.0.0.1:1228")
@@ -91,14 +87,6 @@ func main() {
 	//kad7.AddRoutingtable(contact8)
 	//kad7.AddRoutingtable(contact9)
 
-	/*
-		contacts1 := kad1.GetRoutingtable().FindClosestContacts(contact.ID, 20)
-		for i := range contacts1 {
-			fmt.Println(contacts1[i].String())
-		}
-	*/
-	//netc.SendPingMessage(&contact)
-
 	net1 := kad1.GetNetwork()
 
 	net2 := kad2.GetNetwork()
@@ -111,7 +99,7 @@ func main() {
 
 	net6 := kad6.GetNetwork()
 
-	net7 := kad7.GetNetwork()
+	//net7 := kad7.GetNetwork()
 
 	go net1.Listen(me)
 	go net2.Listen(contact2)
@@ -119,33 +107,45 @@ func main() {
 	go net4.Listen(contact4)
 	go net5.Listen(contact5)
 	go net6.Listen(contact6)
-	go net7.Listen(contact7)
-	// go net1.SendPingMessage(&contact2)
-	//net1.AddMessage(&contact2)
-	//go kad1.LookupContact(&contact7)
+	//go net7.Listen(contact7)
+	
+	
 	//go kad1.Store("aids")
 
-	//go net1.SendFindContactMessage(&contact2)
-	for i := 0; i < 2; i++ {
+	
+	for i := 0; i < 1; i++ {
 		go net1.SendPingMessage(&contact2)
 		go net1.SendPingMessage(&contact7)
 	}
-	/*
-		//rt := kademlia.NewRoutingTable(kademlia.NewContact(kademlia.NewKademliaID("FFFFFFFF00000000000000000000000000000000"), "localhost:8000"))
-		for i := 1; i < 10; i++ {
-			rt.AddContact(kademlia.NewContact(kademlia.NewRandomKademliaID(), "localhost:800"+strconv.Itoa(i)))
-		}
-		contacts := rt.FindClosestContacts(kademlia.NewKademliaID("FFFFFFFF00000000000000000000000000000000"), 20)
-		for i := range contacts {
-			fmt.Println(contacts[i].String())
-		}
-	*/
+	fmt.Println("Ping Done")
+
+	/*net1.AddMessage(&contact2)
+	go kad1.LookupContact(&contact7)
+	go net1.SendFindContactMessage(&contact2)
 	for {
 		if kad1.GetFound() != false {
 			fmt.Println("END")
 			break
 		}
 	}
+	*/
 	for {
+	}
+}
+
+func start100() {
+	for i:=0; i < 100; i++ {
+		iString := strconv.Itoa(i)
+		var contact kademlia.Contact
+		if i < 10 {
+			contact = kademlia.NewContact(kademlia.NewKademliaID(
+				"FFFFFFFFFFF1111111111111111111111111190"+iString), "127.0.0.1:990"+iString)
+		} else {
+			contact = kademlia.NewContact(kademlia.NewKademliaID(
+				"FFFFFFFFFFF111111111111111111111111119"+iString), "127.0.0.1:99"+iString)
+		}
+		kad := kademlia.NewKademlia(contact)
+		net := kad.GetNetwork()
+		go net.Listen(contact)
 	}
 }
