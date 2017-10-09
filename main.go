@@ -2,9 +2,6 @@ package main
 
 import (
 	kademlia "D7024E-Kademlia/d7024e"
-	"crypto/sha1"
-	//"crypto/sha1"
-	"fmt"
 )
 
 //export GOPATH=$HOME/go
@@ -123,13 +120,13 @@ func main() {
 	go net7.Listen(contact7)
 	// go net1.SendPingMessage(&contact2)
 	//net1.AddMessage(&contact2)
-	//go kad1.LookupContact(&contact7)
-	str := "aids in the face"
-	hash := kademlia.KademliaID(sha1.Sum([]byte(str)))
-	fmt.Println("Det här är ursprungshash i main: " + hash.String())
-	kad1.GetNetwork().GetStorage().StoreFile(&hash, str, me.ID.String())
-	fmt.Println("RetrieveFile via main: " + kad1.GetNetwork().GetStorage().RetrieveFile(&hash))
-	kad1.LookupData(str)
+	go kad1.LookupContact(&contact7)
+	//str := "aids in the face"
+	//hash := kademlia.KademliaID(sha1.Sum([]byte(str)))
+	//fmt.Println("Det här är ursprungshash i main: " + hash.String())
+	//kad1.GetNetwork().GetStorage().StoreFile(&hash, str, me.ID.String())
+	//fmt.Println("RetrieveFile via main: " + kad1.GetNetwork().GetStorage().RetrieveFile(&hash))
+	//kad1.LookupData(str)
 
 	//fmt.Print(kad1.Store("aids"))
 	//go net1.SendFindContactMessage(&contact2)
@@ -147,12 +144,6 @@ func main() {
 			fmt.Println(contacts[i].String())
 		}
 	*/
-	for {
-		if kad1.GetFound() != false {
-			fmt.Println("END")
-			break
-		}
-	}
 	for {
 	}
 }

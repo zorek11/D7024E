@@ -58,6 +58,7 @@ func (network *Network) AddResponse(c []Contact) {
 	defer network.mtx.Unlock()
 	network.response = append(network.response, [][]Contact{c}...)
 	fmt.Println("\nResponse: ", network.response)
+	fmt.Println(" in : ", network.me)
 }
 
 func (network *Network) RemoveFirstResponse() {

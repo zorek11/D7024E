@@ -3,6 +3,7 @@ package d7024e
 import (
 	"crypto/sha1"
 	"fmt"
+	"time"
 )
 
 const count = 20
@@ -12,6 +13,7 @@ type Kademlia struct {
 	nt    Network
 	items []string
 	found bool
+	start time.Time
 }
 
 func (kademlia *Kademlia) AddRoutingtable(c Contact) {
@@ -36,54 +38,78 @@ func NewKademlia(self Contact) (kademlia *Kademlia) {
 	return kademlia
 }
 
-func (kademlia *Kademlia) LookupContact(target *Contact) {
+func (kademlia *Kademlia) LookupContact(target *Contact) []Contact {
 	kademlia.nt.AddMessage(target.ID)
 	contacts := kademlia.nt.rt.FindClosestContacts(target.ID, count)
-	//thisalpha := alpha % (len(contacts) + 1)
 	fmt.Println(len(contacts))
-	if contacts[0].ID == target.ID {
-		//return &contacts[0]
-		fmt.Println("Target found: " + target.String())
-		fmt.Println("With address: " + contacts[0].String())
-		return
-	}
-
-	//tempnetwork := NewNetwork(nt.rt, kademlia)
+	result := make([]Contact, 20)
 	for j := 0; j < alpha; j++ {
 		if j >= len(contacts) {
+			fmt.Println("BREAK", j)
 			break
 		}
+		result[j] = contacts[j]
 		go kademlia.nt.SendFindContactMessage(&contacts[j])
 	}
-	//}
+	result = result[0:len(contacts)]
+	for i := 0; i < len(contacts); i++ {
+		result[i] = contacts[i]
+	}
+	kademlia.start = time.Now()
+	t := time.Now()
 	for {
+		t = time.Now()
+		//fmt.Println(len(kademlia.GetNetwork().GetResponse()))
+
+		if t.Sub(kademlia.start) > 5000000000 {
+			fmt.Println("we got the results")
+			fmt.Println("we got the results")
+			fmt.Println("we got the results")
+			fmt.Println("we got the results")
+			fmt.Println("we got the results")
+			fmt.Println("we got the results")
+			fmt.Println("we got the results")
+			fmt.Println("we got the results")
+			return result
+		}
 		if len(kademlia.GetNetwork().GetResponse()) > 0 {
-			//fmt.Println("Response in kademlia: ", kademlia.GetNetwork().GetResponse())
-			//if kademlia.GetNetwork().GetResponse()[0] != nil {
+
 			temp := kademlia.GetNetwork().GetResponse()[0]
-			if temp[0].ID.String() == target.ID.String() {
-				fmt.Println("This is the correct ID String: " + temp[0].ID.String())
-				kademlia.found = true
-				return
-			} else {
-
-				for i := 0; i < alpha; i++ {
-					if i >= len(temp) {
-						break
-					}
-					//fmt.Println("This is the new: ", temp[i])
-					go kademlia.nt.SendFindContactMessage(&temp[i])
-
+			result = kademlia.checkContacts(result, temp)
+			fmt.Println("\n\nthis is the result so far: ", result)
+			for i := 0; i < alpha; i++ {
+				if i >= len(temp) {
+					break
 				}
-
-				kademlia.nt.RemoveFirstResponse()
-
+				go kademlia.nt.SendFindContactMessage(&temp[i])
 			}
-			//}
-
+			kademlia.nt.RemoveFirstResponse()
 		}
 	}
+}
 
+func (kademlia *Kademlia) checkContacts(this []Contact, addition []Contact) []Contact {
+	for j := 0; j < len(addition); j++ {
+		addition[j].CalcDistance(kademlia.nt.target)
+	}
+	var temp ContactCandidates
+	temp.Append(this)
+	temp.Append(addition)
+	temp.Sort()
+	k := 0
+	for k < count && k < len(temp.contacts)-1 {
+		if temp.contacts[k].ID.Equals(temp.contacts[k+1].ID) {
+			fmt.Println("first contact; ", temp.contacts[k].ID.String())
+			fmt.Println("second contact; ", temp.contacts[k+1].ID.String())
+			temp.contacts = append(temp.contacts[:k], temp.contacts[k+1:]...)
+
+		}
+		k++
+	}
+	if len(temp.contacts) < count {
+		return temp.contacts
+	}
+	return temp.contacts[0:count]
 }
 
 //TODO: Implement some kind of deletion if timestamp overdue. (PURGE)
