@@ -86,19 +86,21 @@ func (kademlia *Kademlia) LookupContact(target *Contact) {
 
 }
 
+//TODO: Implement some kind of deletion if timestamp overdue. (PURGE)
 func (kademlia *Kademlia) LookupData(hash string) {
+	target := KademliaID(sha1.Sum([]byte(hash)))
 
-	target := NewKademliaID(hash)
-
-	kademlia.nt.AddMessage(target)
-	contacts := kademlia.nt.rt.FindClosestContacts(target, count)
-	fmt.Println(len(contacts))
-	if contacts[0].ID == target {
-		//TODO change to check local hash
-		fmt.Println("Target found: " + target.String())
-		fmt.Println("With address: " + contacts[0].String())
+	if len(kademlia.nt.storage.RetrieveFile(&target)) > 0 {
+		fmt.Println("File retrieved in LookupData: " + kademlia.nt.storage.RetrieveFile(&target))
+		fmt.Println("File found locally in LookupData: " + target.String())
 		return
 	}
+	for {
+
+	}
+	kademlia.nt.AddMessage(&target)
+	contacts := kademlia.nt.rt.FindClosestContacts(&target, count)
+	fmt.Println(len(contacts))
 
 	//tempnetwork := NewNetwork(nt.rt, kademlia)
 
@@ -142,13 +144,16 @@ func (kademlia *Kademlia) LookupData(hash string) {
 
 }
 
-func (kademlia *Kademlia) Store(data string) {
+//TODO: call Store again after a specific time to store again(REPUBLISH)
+func (kademlia *Kademlia) Store(data string) KademliaID {
+	//TODO: LookupContact find 20 closest somehow. This kademlia doesn't know all contacts in network.
 	hashdata := []byte(data)
 	key := KademliaID(sha1.Sum(hashdata))
-
+	//contacts := kademlia.LookupContact(&target) //How it should work
 	contacts := kademlia.nt.rt.FindClosestContacts(&key, count)
 
 	for j := range contacts {
 		go kademlia.nt.SendStoreMessage(&contacts[j], &key, data)
 	}
+	return key
 }

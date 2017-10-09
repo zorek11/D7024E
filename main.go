@@ -2,6 +2,8 @@ package main
 
 import (
 	kademlia "D7024E-Kademlia/d7024e"
+	"crypto/sha1"
+	//"crypto/sha1"
 	"fmt"
 	"strconv"
 )
@@ -12,15 +14,15 @@ func main() {
 	//contact1 := kademlia.NewContact(kademlia.NewKademliaID("1FFFFFFFFFF11111111111111111111111111191"),
 	//	"127.0.0.1:1221")
 	contact2 := kademlia.NewContact(kademlia.NewKademliaID("1FFFFFFF11111111111111111111111111111192"),
-		"127.0.0.1:1222")
+		"127.0.0.1:1322")
 	contact3 := kademlia.NewContact(kademlia.NewKademliaID("1FFFFFFF11111111111111111111111111111193"),
-		"127.0.0.1:1223")
+		"127.0.0.1:1323")
 	contact4 := kademlia.NewContact(kademlia.NewKademliaID("1FFFFFFF11111111111111111111111111111194"),
-		"127.0.0.1:1224")
+		"127.0.0.1:1324")
 	contact5 := kademlia.NewContact(kademlia.NewKademliaID("1FFFFFFF11111111111111111111111111111195"),
-		"127.0.0.1:1225")
+		"127.0.0.1:1325")
 	contact6 := kademlia.NewContact(kademlia.NewKademliaID("1FFFFFFF11111111111111111111111111111196"),
-		"127.0.0.1:1226")
+		"127.0.0.1:1326")
 	contact7 := kademlia.NewContact(kademlia.NewKademliaID("1FFFFFFF11111111111111111111111111111197"),
 		"127.0.0.1:1227")
 	/*
@@ -37,7 +39,7 @@ func main() {
 	*/
 
 	me := kademlia.NewContact(kademlia.NewKademliaID("FFFFFFFF00000000000000000000000000000000"),
-		"127.0.0.1:1999")
+		"127.0.0.1:1989")
 
 	//rt := kademlia.NewRoutingTable(me)
 	//rt.AddContact(contact)
@@ -107,21 +109,33 @@ func main() {
 	go net4.Listen(contact4)
 	go net5.Listen(contact5)
 	go net6.Listen(contact6)
-	//go net7.Listen(contact7)
-	
-	
-	//go kad1.Store("aids")
+	go net7.Listen(contact7)
+	// go net1.SendPingMessage(&contact2)
+	//net1.AddMessage(&contact2)
+	//go kad1.LookupContact(&contact7)
+	str := "aids in the face"
+	hash := kademlia.KademliaID(sha1.Sum([]byte(str)))
+	fmt.Println("Det här är ursprungshash i main: " + hash.String())
+	kad1.GetNetwork().GetStorage().StoreFile(&hash, str, me.ID.String())
+	fmt.Println("RetrieveFile via main: " + kad1.GetNetwork().GetStorage().RetrieveFile(&hash))
+	kad1.LookupData(str)
 
-	
-	for i := 0; i < 1; i++ {
-		go net1.SendPingMessage(&contact2)
-		go net1.SendPingMessage(&contact7)
-	}
-	fmt.Println("Ping Done")
-
-	/*net1.AddMessage(&contact2)
-	go kad1.LookupContact(&contact7)
-	go net1.SendFindContactMessage(&contact2)
+	//fmt.Print(kad1.Store("aids"))
+	//go net1.SendFindContactMessage(&contact2)
+	//for i := 0; i < 2; i++ {
+	//go net1.SendPingMessage(&contact2)
+	//go net1.SendPingMessage(&contact7)
+	//}
+	/*
+		//rt := kademlia.NewRoutingTable(kademlia.NewContact(kademlia.NewKademliaID("FFFFFFFF00000000000000000000000000000000"), "localhost:8000"))
+		for i := 1; i < 10; i++ {
+			rt.AddContact(kademlia.NewContact(kademlia.NewRandomKademliaID(), "localhost:800"+strconv.Itoa(i)))
+		}
+		contacts := rt.FindClosestContacts(kademlia.NewKademliaID("FFFFFFFF00000000000000000000000000000000"), 20)
+		for i := range contacts {
+			fmt.Println(contacts[i].String())
+		}
+	*/
 	for {
 		if kad1.GetFound() != false {
 			fmt.Println("END")
