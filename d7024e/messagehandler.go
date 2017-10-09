@@ -33,10 +33,7 @@ func buildMessage(input []string) *protobuf.KademliaMessage {
 			Label:      proto.String(input[0]),
 			Senderid:   proto.String(input[1]),
 			SenderAddr: proto.String(input[2]),
-			Lookupcontact: &protobuf.KademliaMessage_LookupContact{
-				Id:      proto.String(input[3]),
-				Address: proto.String(input[4]),
-			},
+			Data:       []byte(input[3]),
 		}
 		return message
 	} else {
@@ -76,7 +73,9 @@ func (this *MessageHandler) handleMessage(channel chan []byte, me *Contact, netw
 		send(message.GetSenderAddr(), response)
 	case "pong":
 		fmt.Print("\n", message)
-		network.pingResp = true
+		pingIndex := IndexInSlice(message.GetSenderAddr(), network.pingList)
+		network.pingList[pingIndex].Response = true
+
 
 	case "LookupContact":
 		fmt.Print("\n", message, "\n\n")
@@ -88,12 +87,13 @@ func (this *MessageHandler) handleMessage(channel chan []byte, me *Contact, netw
 		for i := 0; i < len(temp); i++ {
 			r = r + temp[i].String() + "\n"
 		}
-		response := &protobuf.KademliaMessage{
+		response := buildMessage([]string{"LookupContactResponse", me.ID.String(), me.Address, r})
+		/*response := &protobuf.KademliaMessage{
 			Label:      proto.String("LookupContactResponse"),
 			Senderid:   proto.String(me.ID.String()),
 			SenderAddr: proto.String(me.Address),
 			Data:       []byte(r),
-		}
+		}*/
 		send(message.GetSenderAddr(), response)
 
 	case "LookupContactResponse":

@@ -28,6 +28,7 @@ type Ping struct {
 	Address string
 	Response bool
 	Done chan bool
+	Queue int
 }
 
 func NewNetwork(me Contact, rt *RoutingTable, st Storage) Network {
@@ -117,12 +118,11 @@ func (network *Network) SendPingMessage(contact *Contact) {
 	//build and send ping message
 	pingIndex := IndexInSlice(contact.Address, network.pingList)
 	if pingIndex > -1 { //if address in list
+		network.pingList[pingIndex].Queue = network.pingList[pingIndex].Queue + 1
 		<- network.pingList[pingIndex].Done //wait for previous ping to finsh
-		network.pingList = append(network.pingList[:pingIndex], network.pingList[pingIndex+1:]...)//delete contact from list
+	} else {
+		network.pingList = append(network.pingList, Ping{contact.Address, false, make(chan bool, 1), 0}) //add to pingList
 	}
-	network.pingList = append(network.pingList, Ping{contact.Address, false, make(chan bool, 1)}) //add to pingList
-
-	network.pingResp = false
 	message := buildMessage([]string{"ping", network.me.ID.String(), network.me.Address})
 	data, err := proto.Marshal(message)
 	if err != nil {
@@ -139,13 +139,22 @@ func (network *Network) SendPingMessage(contact *Contact) {
 	}
 	//wait for timeout (2sec)
 	time.Sleep(time.Second * 2)
+	
 	pingIndex = IndexInSlice(contact.Address, network.pingList)
 	if network.pingList[pingIndex].Response {
-	//if network.pingResp {
 		fmt.Println("\nContact alive:", contact.Address)
 	} else {
 		fmt.Println("\nContact dead:", contact.Address)
 	}
+	network.pingList[pingIndex].Queue = network.pingList[pingIndex].Queue - 1 //decrease queue
+	if network.pingList[pingIndex].Queue >= 0 { //if there is someone in the queue release the channel
+		network.pingList[pingIndex].Done <- true
+		fmt.Println(network.pingList)
+	} else {
+		network.pingList = append(network.pingList[:pingIndex], network.pingList[pingIndex+1:]...)//delete contact from list
+		fmt.Println(network.pingList)
+	}
+
 }
 
 func (network *Network) SendFindContactMessage(contact *Contact) {
