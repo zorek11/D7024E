@@ -2,7 +2,6 @@ package main
 
 import (
 	kademlia "D7024E-Kademlia/d7024e"
-	"fmt"
 	"strconv"
 )
 
@@ -109,8 +108,8 @@ func main() {
 	go net6.Listen(contact6)
 	go net7.Listen(contact7)
 
-	net1.AddMessage(contact2.ID)
-	//go kad1.LookupContact(&contact7)
+	//net1.AddMessage(contact2.ID)
+	go kad1.LookupContact(&contact7)
 
 	/*
 		str := "aids in the face"
@@ -135,11 +134,12 @@ func main() {
 			go net1.SendPingMessage(&contact7)
 		}
 	*/
-	net2.GetRoutingTable().PrintRoutingTable()
-	net2.UpdateRoutingtable(contact3)
-	net2.GetRoutingTable().PrintRoutingTable()
+	/*
+		net2.GetRoutingTable().PrintRoutingTable()
+		net2.UpdateRoutingtable(contact3)
+		net2.GetRoutingTable().PrintRoutingTable()
 
-	fmt.Println("GOLANG är fan sämst")
+		fmt.Println("GOLANG är fan sämst")*/
 	for {
 	}
 }

@@ -75,17 +75,31 @@ func (kademlia *Kademlia) LookupContact(target *Contact) []Contact {
 		if len(kademlia.GetNetwork().GetResponse()) > 0 {
 
 			temp := kademlia.GetNetwork().GetResponse()[0]
-			result = kademlia.checkContacts(result, temp)
-			fmt.Println("\n\nthis is the result so far: ", result)
-			for i := 0; i < alpha; i++ {
+			tempAlpha := alpha
+			for i := 0; i < tempAlpha; i++ {
 				if i >= len(temp) {
 					break
 				}
-				go kademlia.nt.SendFindContactMessage(&temp[i])
+				if existsIn(temp[i], result) {
+					tempAlpha++
+				} else {
+					go kademlia.nt.SendFindContactMessage(&temp[i])
+				}
 			}
+			result = kademlia.checkContacts(result, temp)
+			fmt.Println("\n\nthis is the result so far: ", result)
 			kademlia.nt.RemoveFirstResponse()
 		}
 	}
+}
+
+func existsIn(c Contact, contacts []Contact) bool {
+	for i := 0; i < len(contacts); i++ {
+		if c.ID.Equals(contacts[i].ID) {
+			return true
+		}
+	}
+	return false
 }
 
 func (kademlia *Kademlia) checkContacts(this []Contact, addition []Contact) []Contact {
@@ -99,12 +113,12 @@ func (kademlia *Kademlia) checkContacts(this []Contact, addition []Contact) []Co
 	k := 0
 	for k < count && k < len(temp.contacts)-1 {
 		if temp.contacts[k].ID.Equals(temp.contacts[k+1].ID) {
-			fmt.Println("first contact; ", temp.contacts[k].ID.String())
-			fmt.Println("second contact; ", temp.contacts[k+1].ID.String())
 			temp.contacts = append(temp.contacts[:k], temp.contacts[k+1:]...)
 
+		} else {
+			kademlia.start = time.Now()
+			k++
 		}
-		k++
 	}
 	if len(temp.contacts) < count {
 		return temp.contacts
