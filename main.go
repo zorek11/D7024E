@@ -3,7 +3,7 @@ package main
 import (
 	kademlia "D7024E-Kademlia/d7024e"
 	//"crypto/sha1"
-	//"fmt"
+	"fmt"
 	"strconv"
 )
 
@@ -109,10 +109,10 @@ func main() {
 	go net5.Listen(contact5)
 	go net6.Listen(contact6)
 	go net7.Listen(contact7)
-
 	
 	net1.AddMessage(contact2.ID)
-	go kad1.LookupContact(&contact7)
+	//go kad1.LookupContact(&contact7)
+	
 	/*
 	str := "aids in the face"
 	hash := kademlia.KademliaID(sha1.Sum([]byte(str)))
@@ -124,17 +124,23 @@ func main() {
 	//fmt.Print(kad1.Store("aids"))
 	//go net1.SendFindContactMessage(&contact2)
 
-	for {
+	/*for {
 		if kad1.GetFound() != false {
 			fmt.Println("END")
 			break
 		}
 	}*/
+	/*
 	for i := 0; i < 3; i++ {
 		go net1.SendPingMessage(&contact2)
 		go net1.SendPingMessage(&contact7)
 	}
+*/
+	net2.GetRoutingTable().PrintRoutingTable()
+	net2.UpdateRoutingtable(contact3)
+	net2.GetRoutingTable().PrintRoutingTable()
 
+	fmt.Println("GOLANG är fan sämst")
 	for {
 	}
 }
