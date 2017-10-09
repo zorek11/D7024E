@@ -19,15 +19,15 @@ type Network struct {
 	rt        *RoutingTable
 	mtx       *sync.Mutex
 	dataFound string
-	pingList []Ping
+	pingList  []Ping
 	storage   Storage
 }
 
 type Ping struct {
-	Address string
+	Address  string
 	Response bool
-	Done chan bool
-	Queue int
+	Done     chan bool
+	Queue    int
 }
 
 func NewNetwork(me Contact, rt *RoutingTable, st Storage) Network {
@@ -85,7 +85,7 @@ func (network *Network) GetRoutingTable() *RoutingTable {
 
 /**
 * Establishes a UDP-listner on an adress and handles incoming traffic in a differnt go-routine
-*/
+ */
 func (network *Network) Listen(me Contact) {
 	messagehandler := NewMessageHandler(network)
 	Addr, err1 := net.ResolveUDPAddr("udp", me.Address)
@@ -112,14 +112,14 @@ func (network *Network) Listen(me Contact) {
 
 /**
 * Sends a ping message and waits for timeout.
-*/
+ */
 func (network *Network) SendPingMessage(contact *Contact) {
 	//build and send ping message
-	//make sure to send ping in order and wait for response. 
+	//make sure to send ping in order and wait for response.
 	pingIndex := IndexInSlice(contact.Address, network.pingList)
 	if pingIndex > -1 { //if address in list
 		network.pingList[pingIndex].Queue = network.pingList[pingIndex].Queue + 1
-		<- network.pingList[pingIndex].Done //wait for previous ping to finsh
+		<-network.pingList[pingIndex].Done //wait for previous ping to finsh
 	} else {
 		network.pingList = append(network.pingList, Ping{contact.Address, false, make(chan bool, 1), 0}) //add to pingList
 	}
@@ -127,7 +127,7 @@ func (network *Network) SendPingMessage(contact *Contact) {
 	//build and send message
 	message := buildMessage([]string{"ping", network.me.ID.String(), network.me.Address})
 	send(contact.Address, message)
-	
+
 	//wait for timeout (2sec)
 	time.Sleep(time.Second * 2)
 	pingIndex = IndexInSlice(contact.Address, network.pingList)
@@ -137,11 +137,11 @@ func (network *Network) SendPingMessage(contact *Contact) {
 		fmt.Println("\nContact dead:", contact.Address)
 	}
 	network.pingList[pingIndex].Queue = network.pingList[pingIndex].Queue - 1 //decrease queue
-	if network.pingList[pingIndex].Queue >= 0 { //if there is someone in the queue release the channel
+	if network.pingList[pingIndex].Queue >= 0 {                               //if there is someone in the queue release the channel
 		network.pingList[pingIndex].Done <- true
 		fmt.Println(network.pingList)
 	} else {
-		network.pingList = append(network.pingList[:pingIndex], network.pingList[pingIndex+1:]...)//delete contact from list
+		network.pingList = append(network.pingList[:pingIndex], network.pingList[pingIndex+1:]...) //delete contact from list
 		fmt.Println(network.pingList)
 	}
 
@@ -159,7 +159,7 @@ func (network *Network) SendFindContactMessage(contact *Contact) {
 	send(contact.Address, message)
 }
 
-func (network *Network) SendFindDataMessage(hash string) {
+func (network *Network) SendFindDataMessage(hash string, target *KademliaID) {
 	//TODO
 
 }
@@ -169,11 +169,10 @@ func (network *Network) SendStoreMessage(contact *Contact, key *KademliaID, valu
 	send(contact.Address, message)
 }
 
-
 /**
-* Updates a routing table accoring to the Kademlia specs. 
+* Updates a routing table accoring to the Kademlia specs.
 * Uses network.ping
-*/
+ */
 func (network *Network) UpdateRoutingtable(contact Contact) {
 	network.mtx.Lock()
 	defer network.mtx.Unlock()
@@ -193,8 +192,8 @@ func (network *Network) UpdateRoutingtable(contact Contact) {
 		} else {
 			lastContact := bucket.list.Back().Value.(Contact)
 			go network.SendPingMessage(&lastContact)
-			pingIndex := IndexInSlice(contact.Address, network.pingList) 
-			if network.pingList[pingIndex].Response{ //if I have no resonse add delete contact and add new
+			pingIndex := IndexInSlice(contact.Address, network.pingList)
+			if network.pingList[pingIndex].Response { //if I have no resonse add delete contact and add new
 				bucket.RemoveContact(lastContact)
 				bucket.AddContact(contact)
 			}
@@ -206,7 +205,7 @@ func (network *Network) UpdateRoutingtable(contact Contact) {
 
 /**
 * Sends a protobuf message to the address via UDP
-*/
+ */
 func send(Address string, message *protobuf.KademliaMessage) {
 	data, err := proto.Marshal(message)
 	if err != nil {
@@ -225,15 +224,15 @@ func send(Address string, message *protobuf.KademliaMessage) {
 }
 
 /**
-* Finds the index of a elememt in a Pingslice. Returns -1 on nonexisting element. 
-*/ 
+* Finds the index of a elememt in a Pingslice. Returns -1 on nonexisting element.
+ */
 func IndexInSlice(Address string, list []Ping) int {
-	i := 0;
-    for _, x := range list {
-        if x.Address == Address {
-            return i
+	i := 0
+	for _, x := range list {
+		if x.Address == Address {
+			return i
 		}
 		i++
-    }
-    return -1
+	}
+	return -1
 }

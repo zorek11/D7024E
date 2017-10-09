@@ -38,9 +38,9 @@ func NewKademlia(self Contact) (kademlia *Kademlia) {
 	return kademlia
 }
 
-func (kademlia *Kademlia) LookupContact(target *Contact) []Contact {
-	kademlia.nt.AddMessage(target.ID)
-	contacts := kademlia.nt.rt.FindClosestContacts(target.ID, count)
+func (kademlia *Kademlia) LookupContact(target *KademliaID) []Contact {
+	kademlia.nt.AddMessage(target)
+	contacts := kademlia.nt.rt.FindClosestContacts(target, count)
 	fmt.Println(len(contacts))
 	result := make([]Contact, 20)
 	for j := 0; j < alpha; j++ {
@@ -62,14 +62,7 @@ func (kademlia *Kademlia) LookupContact(target *Contact) []Contact {
 		//fmt.Println(len(kademlia.GetNetwork().GetResponse()))
 
 		if t.Sub(kademlia.start) > 5000000000 {
-			fmt.Println("we got the results")
-			fmt.Println("we got the results")
-			fmt.Println("we got the results")
-			fmt.Println("we got the results")
-			fmt.Println("we got the results")
-			fmt.Println("we got the results")
-			fmt.Println("we got the results")
-			fmt.Println("we got the results")
+			fmt.Println("we got the timeout")
 			return result
 		}
 		if len(kademlia.GetNetwork().GetResponse()) > 0 {
@@ -128,57 +121,62 @@ func (kademlia *Kademlia) checkContacts(this []Contact, addition []Contact) []Co
 
 //TODO: Implement some kind of deletion if timestamp overdue. (PURGE)
 func (kademlia *Kademlia) LookupData(hash string) {
-	target := KademliaID(sha1.Sum([]byte(hash)))
-
-	if len(kademlia.nt.storage.RetrieveFile(&target)) > 0 {
-		fmt.Println("File retrieved in LookupData: " + kademlia.nt.storage.RetrieveFile(&target))
-		fmt.Println("File found locally in LookupData: " + target.String())
+	hashdata := []byte(hash)
+	target := KademliaID(sha1.Sum(hashdata))
+	kademlia.nt.AddMessage(&target)
+	if kademlia.nt.storage.RetrieveFile(&target) != "" {
+		fmt.Println("found target locally")
 		return
 	}
-	for {
-
-	}
-	kademlia.nt.AddMessage(&target)
 	contacts := kademlia.nt.rt.FindClosestContacts(&target, count)
 	fmt.Println(len(contacts))
-
-	//tempnetwork := NewNetwork(nt.rt, kademlia)
-
+	result := make([]Contact, 20)
 	for j := 0; j < alpha; j++ {
 		if j >= len(contacts) {
+			fmt.Println("BREAK", j)
 			break
 		}
+		result[j] = contacts[j]
+		go kademlia.nt.SendFindDataMessage(hash, contacts[j].ID)
 		go kademlia.nt.SendFindContactMessage(&contacts[j])
 	}
-	//}
+	result = result[0:len(contacts)]
+	for i := 0; i < len(contacts); i++ {
+		result[i] = contacts[i]
+	}
+	kademlia.start = time.Now()
+	t := time.Now()
 	for {
+		t = time.Now()
+		//fmt.Println(len(kademlia.GetNetwork().GetResponse()))
+
 		if kademlia.nt.GetData() != "" {
 			fmt.Println(kademlia.nt.GetData())
+			return
+		}
+
+		if t.Sub(kademlia.start) > 5000000000 {
+			fmt.Println("we got the timeout")
+			return
 		}
 		if len(kademlia.GetNetwork().GetResponse()) > 0 {
-			//fmt.Println("Response in kademlia: ", kademlia.GetNetwork().GetResponse())
-			//if kademlia.GetNetwork().GetResponse()[0] != nil {
+
 			temp := kademlia.GetNetwork().GetResponse()[0]
-			if temp[0].ID.String() == target.String() {
-				fmt.Println("This is the correct ID String: " + temp[0].ID.String())
-				kademlia.found = true
-				return
-			} else {
-
-				for i := 0; i < alpha; i++ {
-					if i >= len(temp) {
-						break
-					}
-					//fmt.Println("This is the new: ", temp[i])
-					go kademlia.nt.SendFindContactMessage(&temp[i])
-
+			tempAlpha := alpha
+			for i := 0; i < tempAlpha; i++ {
+				if i >= len(temp) {
+					break
 				}
-
-				kademlia.nt.RemoveFirstResponse()
-
+				if existsIn(temp[i], result) {
+					tempAlpha++
+				} else {
+					go kademlia.nt.SendFindContactMessage(&temp[i])
+					go kademlia.nt.SendFindDataMessage(hash, temp[i].ID)
+				}
 			}
-			//}
-
+			result = kademlia.checkContacts(result, temp)
+			fmt.Println("\n\nthis is the result so far: ", result)
+			kademlia.nt.RemoveFirstResponse()
 		}
 	}
 
