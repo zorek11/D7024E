@@ -75,7 +75,7 @@ func (this *MessageHandler) handleMessage(channel chan []byte, me *Contact, netw
 		}
 	case "LookupDataResponse":
 		s := string(message.Data)
-		network.AddResponse(s)
+		network.AddData(s)
 
 	case "StoreData":
 		key := NewKademliaID(*(message.Key))
@@ -152,7 +152,7 @@ func buildMessage(input []string) *protobuf.KademliaMessage {
 		}
 		return message
 	}
-	if input[0] == "LookupContactResponse" || "LookupContactResponse" {
+	if input[0] == "LookupContactResponse" || input[0] == "LookupContactResponse" {
 		message := &protobuf.KademliaMessage{
 			Label:      proto.String(input[0]),
 			Senderid:   proto.String(input[1]),
