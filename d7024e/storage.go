@@ -1,7 +1,6 @@
 package d7024e
 
 import (
-	"fmt"
 	"time"
 )
 
@@ -47,11 +46,11 @@ func (storage *Storage) StoreFile(key *KademliaID, value string, publisher strin
 func (storage *Storage) DeleteFile(key *KademliaID) {
 	delete(storage.valueht, *key)
 	delete(storage.publisherht, *key)
+	delete(storage.timeht, *key)
+	//delete(storage.pinht, *key)
 }
 
 func (storage *Storage) RetrieveFile(key *KademliaID) string {
-	start := time.Now()
-	fmt.Print(start.Sub(storage.timeht[*key]))
 	return storage.valueht[*key]
 }
 
