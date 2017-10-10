@@ -2,7 +2,6 @@ package main
 
 import (
 	kademlia "D7024E-Kademlia/d7024e"
-	"crypto/sha1"
 	"fmt"
 	"math"
 	"strconv"
@@ -140,26 +139,37 @@ func simulateN(n int) {
 		go kademlias[l].GetNetwork().Listen(contacts[l])
 	}
 	for m := 0; m < n-1; m++ {
-		fmt.Println(contacts[m])
-		if m == 0 {
-			fmt.Println(contacts[m+1])
-			kademlias[m].GetRoutingtable().AddContact(contacts[m+1])
-		} else if m == n-2 {
-			kademlias[m].GetRoutingtable().AddContact(contacts[m-1])
-		} else {
-			kademlias[m].GetRoutingtable().AddContact(contacts[m+1])
-			kademlias[m].GetRoutingtable().AddContact(contacts[m-1])
-		}
+		kademlias[m].GetRoutingtable().AddContact(contacts[0])
+		kademlias[m].LookupContact(contacts[m].ID)
+		/*
+			if m == 0 {
+				fmt.Println(contacts[m+1])
+				kademlias[m].GetRoutingtable().AddContact(contacts[m+1])
+			} else if m == n-2 {
+				kademlias[m].GetRoutingtable().AddContact(contacts[m-1])
+			} else if m > 5 && m < n-7 {
+				//kademlias[m].GetRoutingtable().AddContact(contacts[m+4])
+				kademlias[m].GetRoutingtable().AddContact(contacts[m+3])
+				kademlias[m].GetRoutingtable().AddContact(contacts[m+2])
+				kademlias[m].GetRoutingtable().AddContact(contacts[m+1])
+				kademlias[m].GetRoutingtable().AddContact(contacts[m-1])
+				kademlias[m].GetRoutingtable().AddContact(contacts[m-2])
+				kademlias[m].GetRoutingtable().AddContact(contacts[m-3])
+				kademlias[m].GetRoutingtable().AddContact(contacts[m-4])
+			} else {
+				kademlias[m].GetRoutingtable().AddContact(contacts[m+1])
+			}
+		*/
 	}
+	/*
+		str := "aids in the face"
+		hash := kademlia.KademliaID(sha1.Sum([]byte(str)))
+		fmt.Println("Det här är ursprungshash i main: " + hash.String())
+		kademlias[n-2].GetNetwork().GetStorage().StoreFile(&hash, str, contacts[0].ID.String())
 
-	str := "aids in the face"
-	hash := kademlia.KademliaID(sha1.Sum([]byte(str)))
-	fmt.Println("Det här är ursprungshash i main: " + hash.String())
-	kademlias[n-2].GetNetwork().GetStorage().StoreFile(&hash, str, contacts[0].ID.String())
-
-	go kademlias[0].LookupData(hash.String())
-
-	//go kademlias[0].LookupContact(contacts[n-2].ID)
+		go kademlias[0].LookupData(hash.String())
+	*/
+	kademlias[0].LookupContact(contacts[n-2].ID)
 
 	for {
 
