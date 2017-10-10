@@ -36,8 +36,9 @@ func (this *MessageHandler) handleMessage(channel chan []byte, me *Contact, netw
 		response := buildMessage([]string{"pong", me.ID.String(), me.Address})
 		send(message.GetSenderAddr(), response)
 	case "pong":
-		pingIndex := IndexInSlice(message.GetSenderAddr(), network.pingList)
-		network.pingList[pingIndex].Response = true
+		network.pingResponse = true
+		//pingIndex := IndexInSlice(message.GetSenderAddr(), network.pingList)
+		//network.pingList[pingIndex].Response = true
 
 
 	case "LookupContact":
@@ -58,8 +59,23 @@ func (this *MessageHandler) handleMessage(channel chan []byte, me *Contact, netw
 		}
 
 	case "LookupData":
-
+		key := NewKademliaID(*(message.Key))
+		storage := network.storage.RetrieveFile(key)
+		if len(storage) > 0 { //if data found
+			response := buildMessage([]string{"LookupDataResponse", me.ID.String(), me.Address, storage})
+			send(message.GetSenderAddr(), response)
+		} else { //return K-closest
+			temp := network.rt.FindClosestContacts(key, 20) //no recursion
+			r := ""
+			for i := 0; i < len(temp); i++ {
+				r = r + temp[i].String() + "\n"
+			}
+			response := buildMessage([]string{"LookupContactResponse", me.ID.String(), me.Address, r})
+			send(message.GetSenderAddr(), response)
+		}
 	case "LookupDataResponse":
+		s := string(message.Data)
+		network.AddResponse(s)
 
 	case "StoreData":
 		key := NewKademliaID(*(message.Key))
@@ -126,7 +142,17 @@ func buildMessage(input []string) *protobuf.KademliaMessage {
 		}
 		return message
 	}
-	if input[0] == "LookupContactResponse" {
+	if input[0] == "LookupData" {
+		message := &protobuf.KademliaMessage{
+			Label:      proto.String(input[0]),
+			Senderid:   proto.String(input[1]),
+			SenderAddr: proto.String(input[2]),
+			Data:       []byte(input[3]),
+			Key:        proto.String(input[4]),
+		}
+		return message
+	}
+	if input[0] == "LookupContactResponse" || "LookupContactResponse" {
 		message := &protobuf.KademliaMessage{
 			Label:      proto.String(input[0]),
 			Senderid:   proto.String(input[1]),

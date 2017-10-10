@@ -19,7 +19,8 @@ type Network struct {
 	rt        *RoutingTable
 	mtx       *sync.Mutex
 	dataFound string
-	pingList  []Ping
+	pingList []Ping
+	pingResponse bool
 	storage   Storage
 }
 
@@ -61,7 +62,6 @@ func (network *Network) AddResponse(c []Contact) {
 	defer network.mtx.Unlock()
 	network.response = append(network.response, [][]Contact{c}...)
 	fmt.Println("\nResponse: ", network.response)
-	fmt.Println(" in : ", network.me)
 }
 
 func (network *Network) RemoveFirstResponse() {
@@ -112,38 +112,45 @@ func (network *Network) Listen(me Contact) {
 
 /**
 * Sends a ping message and waits for timeout.
- */
-func (network *Network) SendPingMessage(contact *Contact) {
+*/
+func (network *Network) SendPingMessage(contact *Contact) bool {
+	fmt.Println("PING")
 	//build and send ping message
-	//make sure to send ping in order and wait for response.
-	pingIndex := IndexInSlice(contact.Address, network.pingList)
+	//make sure to send ping in order and wait for response. 
+	/*pingIndex := IndexInSlice(contact.Address, network.pingList)
 	if pingIndex > -1 { //if address in list
 		network.pingList[pingIndex].Queue = network.pingList[pingIndex].Queue + 1
 		<-network.pingList[pingIndex].Done //wait for previous ping to finsh
 	} else {
 		network.pingList = append(network.pingList, Ping{contact.Address, false, make(chan bool, 1), 0}) //add to pingList
-	}
+	}*/
 
 	//build and send message
+	network.pingResponse = false
 	message := buildMessage([]string{"ping", network.me.ID.String(), network.me.Address})
 	send(contact.Address, message)
 
 	//wait for timeout (2sec)
 	time.Sleep(time.Second * 2)
-	pingIndex = IndexInSlice(contact.Address, network.pingList)
-	if network.pingList[pingIndex].Response {
-		fmt.Println("\nContact alive:", contact.Address)
-	} else {
-		fmt.Println("\nContact dead:", contact.Address)
-	}
-	network.pingList[pingIndex].Queue = network.pingList[pingIndex].Queue - 1 //decrease queue
-	if network.pingList[pingIndex].Queue >= 0 {                               //if there is someone in the queue release the channel
+
+	/*network.pingList[pingIndex].Queue = network.pingList[pingIndex].Queue - 1 //decrease queue
+	if network.pingList[pingIndex].Queue >= 0 { //if there is someone in the queue release the channel
 		network.pingList[pingIndex].Done <- true
 		fmt.Println(network.pingList)
 	} else {
 		network.pingList = append(network.pingList[:pingIndex], network.pingList[pingIndex+1:]...) //delete contact from list
 		fmt.Println(network.pingList)
 	}
+	pingIndex = IndexInSlice(contact.Address, network.pingList)
+	*/if network.pingResponse {
+		fmt.Println("\nContact alive:", contact.Address)
+		return true
+	} else {
+		fmt.Println("\nContact dead:", contact.Address)
+		return false
+	}
+	
+	
 
 }
 
@@ -181,7 +188,6 @@ func (network *Network) SendStoreMessage(contact *Contact, key *KademliaID, valu
  */
 func (network *Network) UpdateRoutingtable(contact Contact) {
 	network.mtx.Lock()
-	defer network.mtx.Unlock()
 	bucket := network.rt.buckets[network.rt.getBucketIndex(contact.ID)]
 	var element *list.Element
 	for e := bucket.list.Front(); e != nil; e = e.Next() {
@@ -197,9 +203,10 @@ func (network *Network) UpdateRoutingtable(contact Contact) {
 			bucket.list.PushFront(contact)
 		} else {
 			lastContact := bucket.list.Back().Value.(Contact)
-			go network.SendPingMessage(&lastContact)
-			pingIndex := IndexInSlice(contact.Address, network.pingList)
-			if network.pingList[pingIndex].Response { //if I have no resonse add delete contact and add new
+			network.mtx.Unlock()
+			ping := network.SendPingMessage(&lastContact)
+			network.mtx.Lock()
+			if !ping { //if I have no resonse add delete contact and add new
 				bucket.RemoveContact(lastContact)
 				bucket.AddContact(contact)
 			}
@@ -207,6 +214,7 @@ func (network *Network) UpdateRoutingtable(contact Contact) {
 	} else { //if I have the element move it to front
 		bucket.list.MoveToFront(element)
 	}
+	network.mtx.Unlock()
 }
 
 /**
