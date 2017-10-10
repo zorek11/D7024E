@@ -4,6 +4,7 @@ import (
 	"D7024E-Kademlia/protobuf"
 	"fmt"
 	"strings"
+
 	"github.com/golang/protobuf/proto"
 )
 
@@ -17,11 +18,12 @@ func NewMessageHandler(net *Network) *MessageHandler {
 	return mes
 }
 
-
 /**
-* Messagehandler for a listner. Handles all messages in a switch and takes according actions. 
-*/
+* Messagehandler for a listner. Handles all messages in a switch and takes according actions.
+ */
 func (this *MessageHandler) handleMessage(channel chan []byte, me *Contact, network *Network) {
+	//this.network.mtx.Lock()
+	//defer this.network.mtx.Unlock()
 	data := <-channel
 	message := &protobuf.KademliaMessage{}
 	err := proto.Unmarshal(data, message)
@@ -29,10 +31,10 @@ func (this *MessageHandler) handleMessage(channel chan []byte, me *Contact, netw
 		fmt.Println(err)
 	}
 	sender := NewContact(NewKademliaID(message.GetSenderid()), message.GetSenderAddr())
-	fmt.Println("\n\nListner:", me, "\nSender: ", sender, "\nMessage: ", message)
+	fmt.Print("\n\nListner:", me, "\nSender: ", sender, "\nMessage: ", message)
 	network.UpdateRoutingtable(sender) //update routingtable on all RPCs
 	switch *message.Label {
-	case "ping":	
+	case "ping":
 		response := buildMessage([]string{"pong", me.ID.String(), me.Address})
 		send(message.GetSenderAddr(), response)
 	case "pong":
@@ -40,10 +42,12 @@ func (this *MessageHandler) handleMessage(channel chan []byte, me *Contact, netw
 		//pingIndex := IndexInSlice(message.GetSenderAddr(), network.pingList)
 		//network.pingList[pingIndex].Response = true
 
-
 	case "LookupContact":
+
 		id := NewKademliaID(*message.Lookupcontact.Id)
 		temp := network.rt.FindClosestContacts(id, 20) //no recursion
+
+		fmt.Println("in lookupcontact case - temp: ", temp)
 		r := ""
 		for i := 0; i < len(temp); i++ {
 			r = r + temp[i].String() + "\n"
@@ -59,6 +63,7 @@ func (this *MessageHandler) handleMessage(channel chan []byte, me *Contact, netw
 		}
 
 	case "LookupData":
+		fmt.Println("this is message key", message.Key)
 		key := NewKademliaID(*(message.Key))
 		storage := network.storage.RetrieveFile(key)
 		if len(storage) > 0 { //if data found
@@ -66,6 +71,7 @@ func (this *MessageHandler) handleMessage(channel chan []byte, me *Contact, netw
 			send(message.GetSenderAddr(), response)
 		} else { //return K-closest
 			temp := network.rt.FindClosestContacts(key, 20) //no recursion
+			fmt.Println("\nthis is temp", temp)
 			r := ""
 			for i := 0; i < len(temp); i++ {
 				r = r + temp[i].String() + "\n"
@@ -87,14 +93,14 @@ func (this *MessageHandler) handleMessage(channel chan []byte, me *Contact, netw
 
 	default:
 		fmt.Println("PANIC in switch")
-		
+
 	}
 
 }
 
 /**
 * Takes a string of contacts and parses it to a slice of contacts
-*/
+ */
 func unparseContacts(input string) []Contact {
 	var contactList []Contact
 	split := strings.Split(input, "\n")
@@ -107,7 +113,7 @@ func unparseContacts(input string) []Contact {
 }
 
 /*
-*/
+ */
 func parseContacts(input []string) *protobuf.KademliaMessage {
 	message := &protobuf.KademliaMessage{
 		Label:      proto.String("LookupContactResponse"),
@@ -123,7 +129,7 @@ func buildContact(message *protobuf.KademliaMessage_LookupContact) Contact {
 
 /**
 * Builds a protobuf message from a input array
-*/ 
+ */
 func buildMessage(input []string) *protobuf.KademliaMessage {
 	if input[0] == "ping" || input[0] == "pong" {
 		message := &protobuf.KademliaMessage{
@@ -152,7 +158,7 @@ func buildMessage(input []string) *protobuf.KademliaMessage {
 		}
 		return message
 	}
-	if input[0] == "LookupContactResponse" || input[0] == "LookupContactResponse" {
+	if input[0] == "LookupContactResponse" || input[0] == "LookupDataResponse" {
 		message := &protobuf.KademliaMessage{
 			Label:      proto.String(input[0]),
 			Senderid:   proto.String(input[1]),

@@ -73,7 +73,7 @@ func (kademlia *Kademlia) LookupContact(target *KademliaID) []Contact {
 				if i >= len(temp) {
 					break
 				}
-				if existsIn(temp[i], result) {
+				if existsIn(temp[i], result) || temp[i].ID.Equals(kademlia.nt.rt.me.ID) {
 					tempAlpha++
 				} else {
 					go kademlia.nt.SendFindContactMessage(&temp[i])
@@ -120,15 +120,14 @@ func (kademlia *Kademlia) checkContacts(this []Contact, addition []Contact) []Co
 }
 
 //TODO: Implement some kind of deletion if timestamp overdue. (PURGE)
-func (kademlia *Kademlia) LookupData(hash string) {
-	hashdata := []byte(hash)
-	target := KademliaID(sha1.Sum(hashdata))
-	kademlia.nt.AddMessage(&target)
-	if kademlia.nt.storage.RetrieveFile(&target) != "" {
+func (kademlia *Kademlia) LookupData(hash string) string {
+	target := NewKademliaID(hash)
+	kademlia.nt.AddMessage(target)
+	if len(kademlia.nt.storage.RetrieveFile(target)) > 0 {
 		fmt.Println("found target locally")
-		return
+		return kademlia.nt.storage.RetrieveFile(target)
 	}
-	contacts := kademlia.nt.rt.FindClosestContacts(&target, count)
+	contacts := kademlia.nt.rt.FindClosestContacts(target, count)
 	fmt.Println(len(contacts))
 	result := make([]Contact, 20)
 	for j := 0; j < alpha; j++ {
@@ -138,7 +137,6 @@ func (kademlia *Kademlia) LookupData(hash string) {
 		}
 		result[j] = contacts[j]
 		go kademlia.nt.SendFindDataMessage(hash, &contacts[j])
-		go kademlia.nt.SendFindContactMessage(&contacts[j])
 	}
 	result = result[0:len(contacts)]
 	for i := 0; i < len(contacts); i++ {
@@ -150,14 +148,14 @@ func (kademlia *Kademlia) LookupData(hash string) {
 		t = time.Now()
 		//fmt.Println(len(kademlia.GetNetwork().GetResponse()))
 
-		if kademlia.nt.GetData() != "" {
-			fmt.Println(kademlia.nt.GetData())
-			return
+		if len(kademlia.nt.GetData()) > 0 {
+			fmt.Println("data retrieved:", kademlia.nt.GetData())
+			return kademlia.nt.GetData()
 		}
 
 		if t.Sub(kademlia.start) > 5000000000 {
 			fmt.Println("we got the timeout")
-			return
+			return kademlia.nt.GetData()
 		}
 		if len(kademlia.GetNetwork().GetResponse()) > 0 {
 
@@ -167,10 +165,9 @@ func (kademlia *Kademlia) LookupData(hash string) {
 				if i >= len(temp) {
 					break
 				}
-				if existsIn(temp[i], result) {
+				if existsIn(temp[i], result) || temp[i].ID.Equals(kademlia.nt.rt.me.ID) {
 					tempAlpha++
 				} else {
-					go kademlia.nt.SendFindContactMessage(&temp[i])
 					go kademlia.nt.SendFindDataMessage(hash, &temp[i])
 				}
 			}

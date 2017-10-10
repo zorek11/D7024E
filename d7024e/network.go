@@ -12,16 +12,16 @@ import (
 )
 
 type Network struct {
-	me        Contact
-	target    *KademliaID
-	response  [][]Contact
-	temp      *Contact
-	rt        *RoutingTable
-	mtx       *sync.Mutex
-	dataFound string
-	pingList []Ping
+	me           Contact
+	target       *KademliaID
+	response     [][]Contact
+	temp         *Contact
+	rt           *RoutingTable
+	mtx          *sync.Mutex
+	dataFound    string
+	pingList     []Ping
 	pingResponse bool
-	storage   Storage
+	storage      Storage
 }
 
 type Ping struct {
@@ -51,9 +51,12 @@ func (network *Network) AddData(s string) {
 	network.mtx.Lock()
 	defer network.mtx.Unlock()
 	network.dataFound = s
+	fmt.Println("Added data: ", network.dataFound)
 }
 
 func (network *Network) GetData() string {
+	network.mtx.Lock()
+	defer network.mtx.Unlock()
 	return network.dataFound
 }
 
@@ -72,14 +75,20 @@ func (network *Network) RemoveFirstResponse() {
 }
 
 func (network *Network) GetResponse() [][]Contact {
+	network.mtx.Lock()
+	defer network.mtx.Unlock()
 	return network.response
 }
 
 func (network *Network) GetStorage() *Storage {
+	network.mtx.Lock()
+	defer network.mtx.Unlock()
 	return &network.storage
 }
 
 func (network *Network) GetRoutingTable() *RoutingTable {
+	network.mtx.Lock()
+	defer network.mtx.Unlock()
 	return network.rt
 }
 
@@ -112,11 +121,11 @@ func (network *Network) Listen(me Contact) {
 
 /**
 * Sends a ping message and waits for timeout.
-*/
+ */
 func (network *Network) SendPingMessage(contact *Contact) bool {
 	fmt.Println("PING")
 	//build and send ping message
-	//make sure to send ping in order and wait for response. 
+	//make sure to send ping in order and wait for response.
 	/*pingIndex := IndexInSlice(contact.Address, network.pingList)
 	if pingIndex > -1 { //if address in list
 		network.pingList[pingIndex].Queue = network.pingList[pingIndex].Queue + 1
@@ -149,8 +158,6 @@ func (network *Network) SendPingMessage(contact *Contact) bool {
 		fmt.Println("\nContact dead:", contact.Address)
 		return false
 	}
-	
-	
 
 }
 
@@ -167,6 +174,7 @@ func (network *Network) SendFindContactMessage(contact *Contact) {
 }
 
 func (network *Network) SendFindDataMessage(hash string, contact *Contact) {
+
 	message := &protobuf.KademliaMessage{
 		Label:      proto.String("LookupData"),
 		Senderid:   proto.String(network.me.ID.String()),
@@ -221,6 +229,7 @@ func (network *Network) UpdateRoutingtable(contact Contact) {
 * Sends a protobuf message to the address via UDP
  */
 func send(Address string, message *protobuf.KademliaMessage) {
+	fmt.Println("send to anddress: ", Address)
 	data, err := proto.Marshal(message)
 	if err != nil {
 		fmt.Println("Marshal Error: ", err)
