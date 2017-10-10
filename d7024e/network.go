@@ -96,6 +96,7 @@ func (network *Network) GetRoutingTable() *RoutingTable {
 * Establishes a UDP-listner on an adress and handles incoming traffic in a differnt go-routine
  */
 func (network *Network) Listen(me Contact) {
+	fmt.Println("in listen")
 	messagehandler := NewMessageHandler(network)
 	Addr, err1 := net.ResolveUDPAddr("udp", me.Address)
 	Conn, err2 := net.ListenUDP("udp", Addr)

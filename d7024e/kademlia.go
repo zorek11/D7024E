@@ -104,14 +104,29 @@ func (kademlia *Kademlia) checkContacts(this []Contact, addition []Contact) []Co
 	temp.Append(addition)
 	temp.Sort()
 	k := 0
+	timer := 0
+	l := 20
+	if len(temp.contacts) < 20 {
+		l = len(temp.contacts)
+	}
+	fmt.Println("Result BEFORE changes : ", temp.contacts[0:l])
 	for k < count && k < len(temp.contacts)-1 {
 		if temp.contacts[k].ID.Equals(temp.contacts[k+1].ID) {
 			temp.contacts = append(temp.contacts[:k], temp.contacts[k+1:]...)
-
+			k++
 		} else {
+			timer = 1
 			kademlia.start = time.Now()
 			k++
 		}
+	}
+	if timer > 0 {
+		fmt.Println("timer was reset")
+		l = 20
+		if len(temp.contacts) < 20 {
+			l = len(temp.contacts)
+		}
+		fmt.Println("Result after changes : ", temp.contacts[0:l])
 	}
 	if len(temp.contacts) < count {
 		return temp.contacts
