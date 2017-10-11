@@ -64,7 +64,7 @@ func (network *Network) AddResponse(c []Contact) {
 	network.mtx.Lock()
 	defer network.mtx.Unlock()
 	network.response = append(network.response, [][]Contact{c}...)
-	fmt.Println("\nResponse: ", network.response)
+	//fmt.Println("\nResponse: ", network.response)
 }
 
 func (network *Network) RemoveFirstResponse() {
@@ -107,7 +107,7 @@ func (network *Network) Listen(me Contact) {
 	defer Conn.Close()
 
 	channel := make(chan []byte)
-	buf := make([]byte, 1024)
+	buf := make([]byte, 4096)
 	for {
 		go messagehandler.handleMessage(channel, &me, network)
 		n, _, err := Conn.ReadFromUDP(buf)

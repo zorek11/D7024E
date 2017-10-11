@@ -44,7 +44,7 @@ func (this *MessageHandler) handleMessage(channel chan []byte, me *Contact, netw
 		//network.pingList[pingIndex].Response = true
 
 	case "LookupContact":
-
+		//fmt.Println("\nlookup this id: ", KademliaID(sha1.Sum([]byte(*message.Lookupcontact.Id))).String())
 		id := NewKademliaID(*message.Lookupcontact.Id)
 		temp := network.rt.FindClosestContacts(id, 20) //no recursion
 
