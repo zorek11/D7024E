@@ -4,6 +4,7 @@ import (
 	"D7024E-Kademlia/protobuf"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/golang/protobuf/proto"
 )
@@ -67,8 +68,12 @@ func (this *MessageHandler) handleMessage(channel chan []byte, me *Contact, netw
 		key := NewKademliaID(*(message.Key))
 		storage := network.storage.RetrieveFile(key)
 		if len(storage) > 0 { //if data found
-			response := buildMessage([]string{"LookupDataResponse", me.ID.String(), me.Address, storage})
-			send(message.GetSenderAddr(), response)
+			if network.storage.RetrieveTimeSinceStore(key) < time.Hour*23 {
+				response := buildMessage([]string{"LookupDataResponse", me.ID.String(), me.Address, storage})
+				send(message.GetSenderAddr(), response)
+			} else {
+				network.storage.DeleteFile(key)
+			}
 		} else { //return K-closest
 			temp := network.rt.FindClosestContacts(key, 20) //no recursion
 			fmt.Println("\nthis is temp", temp)
