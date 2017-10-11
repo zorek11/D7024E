@@ -3,6 +3,7 @@ package d7024e
 import (
 	"crypto/sha1"
 	"fmt"
+	"sync"
 	"time"
 )
 
@@ -14,6 +15,7 @@ type Kademlia struct {
 	items []string
 	found bool
 	start time.Time
+	mtx   *sync.Mutex
 }
 
 func (kademlia *Kademlia) AddRoutingtable(c Contact) {
@@ -33,6 +35,7 @@ func (kademlia *Kademlia) GetNetwork() *Network {
 
 func NewKademlia(self Contact) (kademlia *Kademlia) {
 	kademlia = new(Kademlia)
+	kademlia.mtx = &sync.Mutex{}
 	kademlia.nt = NewNetwork(self, NewRoutingTable(self), NewStorage())
 	kademlia.found = false
 	return kademlia
@@ -68,7 +71,9 @@ func (kademlia *Kademlia) LookupContact(target *KademliaID) []Contact {
 		if t.Sub(kademlia.start) > 1000000000 {
 			fmt.Println("we got the timeout")
 			fmt.Println("\nhere is the routing table")
+			kademlia.nt.mtx.Lock()
 			kademlia.nt.rt.PrintRoutingTable()
+			kademlia.nt.mtx.Unlock()
 			return result
 		}
 		if len(kademlia.GetNetwork().GetResponse()) > 0 {
@@ -163,7 +168,7 @@ func (kademlia *Kademlia) LookupData(hash string) string {
 	target := NewKademliaID(hash)
 	kademlia.nt.AddMessage(target)
 	if len(kademlia.nt.storage.RetrieveFile(target)) > 0 {
-		fmt.Println("found target locally")
+		fmt.Println("found target locally: ", kademlia.nt.storage.RetrieveFile(target))
 		return kademlia.nt.storage.RetrieveFile(target)
 	}
 	contacted := make([]Contact, 0)
@@ -194,7 +199,9 @@ func (kademlia *Kademlia) LookupData(hash string) string {
 		if t.Sub(kademlia.start) > 1000000000 {
 			fmt.Println("\nwe got the timeout")
 			fmt.Println("\nhere is the routing table")
+			kademlia.nt.mtx.Lock()
 			kademlia.nt.rt.PrintRoutingTable()
+			kademlia.nt.mtx.Unlock()
 			return kademlia.nt.GetData()
 		}
 		if len(kademlia.GetNetwork().GetResponse()) > 0 {
@@ -232,9 +239,17 @@ func (kademlia *Kademlia) Store(data string) {
 	//TODO: LookupContact find 20 closest somehow. This kademlia doesn't know all contacts in network.
 	hashdata := []byte(data)
 	key := KademliaID(sha1.Sum(hashdata))
+<<<<<<< HEAD
 	contacts := kademlia.LookupContact(&key) //How it should work
 	//contacts := kademlia.nt.rt.FindClosestContacts(&key, count)
 
+=======
+	//contacts := kademlia.LookupContact(&target) //How it should work
+	//kademlia.nt.mtx.Lock()
+	//contacts := kademlia.nt.rt.FindClosestContacts(&key, count)
+	contacts := kademlia.LookupContact(&key)
+	//kademlia.nt.mtx.Unlock()
+>>>>>>> d1c15597597687a697760b58c5216e23cac009d7
 	for j := range contacts {
 		go kademlia.nt.SendStoreMessage(&contacts[j], &key, data)
 	}
