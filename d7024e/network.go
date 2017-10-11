@@ -41,6 +41,12 @@ func NewNetwork(me Contact, rt *RoutingTable, st Storage) Network {
 	return network
 }
 
+func (network *Network) GetClosest(target *KademliaID) []Contact {
+	network.mtx.Lock()
+	defer network.mtx.Unlock()
+	return network.rt.FindClosestContacts(target, 20)
+}
+
 func (network *Network) AddMessage(c *KademliaID) {
 	network.mtx.Lock()
 	defer network.mtx.Unlock()
@@ -96,7 +102,7 @@ func (network *Network) GetRoutingTable() *RoutingTable {
 * Establishes a UDP-listner on an adress and handles incoming traffic in a differnt go-routine
  */
 func (network *Network) Listen(me Contact) {
-	fmt.Println("in listen")
+	//fmt.Println("in listen")
 	messagehandler := NewMessageHandler(network)
 	Addr, err1 := net.ResolveUDPAddr("udp", me.Address)
 	Conn, err2 := net.ListenUDP("udp", Addr)
@@ -124,6 +130,8 @@ func (network *Network) Listen(me Contact) {
 * Sends a ping message and waits for timeout.
  */
 func (network *Network) SendPingMessage(contact *Contact) bool {
+	network.mtx.Lock()
+	defer network.mtx.Unlock()
 	fmt.Println("PING")
 	//build and send ping message
 	//make sure to send ping in order and wait for response.
@@ -141,7 +149,7 @@ func (network *Network) SendPingMessage(contact *Contact) bool {
 	send(contact.Address, message)
 
 	//wait for timeout (2sec)
-	time.Sleep(time.Second * 2)
+	time.Sleep(time.Millisecond * 2000)
 
 	/*network.pingList[pingIndex].Queue = network.pingList[pingIndex].Queue - 1 //decrease queue
 	if network.pingList[pingIndex].Queue >= 0 { //if there is someone in the queue release the channel
@@ -163,6 +171,8 @@ func (network *Network) SendPingMessage(contact *Contact) bool {
 }
 
 func (network *Network) SendFindContactMessage(contact *Contact) {
+	network.mtx.Lock()
+	defer network.mtx.Unlock()
 	message := &protobuf.KademliaMessage{
 		Label:      proto.String("LookupContact"),
 		Senderid:   proto.String(network.me.ID.String()),
@@ -175,7 +185,8 @@ func (network *Network) SendFindContactMessage(contact *Contact) {
 }
 
 func (network *Network) SendFindDataMessage(hash string, contact *Contact) {
-
+	network.mtx.Lock()
+	defer network.mtx.Unlock()
 	message := &protobuf.KademliaMessage{
 		Label:      proto.String("LookupData"),
 		Senderid:   proto.String(network.me.ID.String()),
@@ -187,16 +198,22 @@ func (network *Network) SendFindDataMessage(hash string, contact *Contact) {
 }
 
 func (network *Network) SendStoreMessage(contact *Contact, key *KademliaID, value string) {
+	network.mtx.Lock()
+	defer network.mtx.Unlock()
 	message := buildMessage([]string{"StoreData", network.me.ID.String(), network.me.Address, key.String(), value})
 	send(contact.Address, message)
 }
 
 func (network *Network) SendPinMessage(contact *Contact, key *KademliaID) {
+	//network.mtx.Lock()
+	//defer network.mtx.Unlock()
 	message := buildMessage([]string{"Pin", network.me.ID.String(), network.me.Address, key.String()})
 	send(contact.Address, message)
 }
 
 func (network *Network) SendUnpinMessage(contact *Contact, key *KademliaID) {
+	network.mtx.Lock()
+	defer network.mtx.Unlock()
 	message := buildMessage([]string{"Unpin", network.me.ID.String(), network.me.Address, key.String()})
 	send(contact.Address, message)
 }

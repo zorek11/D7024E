@@ -14,6 +14,7 @@ type API struct {
 	kademlia kademlia.Kademlia
 }
 
+/*
 func main() {
 	address := "127.0.0.1:9999"
 	me := kademlia.NewContact(kademlia.NewKademliaID("FFFFFFFF00000000000000000000000000000000"),
@@ -23,7 +24,7 @@ func main() {
 }
 
 /*
- */
+*/
 func NewAPI(address string, kademlia *kademlia.Kademlia) {
 	api := &API{}
 	api.kademlia = *kademlia

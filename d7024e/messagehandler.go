@@ -4,6 +4,7 @@ import (
 	"D7024E-Kademlia/protobuf"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/golang/protobuf/proto"
@@ -11,11 +12,14 @@ import (
 
 type MessageHandler struct {
 	network *Network
+	mtx     *sync.Mutex
 }
 
 func NewMessageHandler(net *Network) *MessageHandler {
 	mes := &MessageHandler{}
 	mes.network = net
+	mes.mtx = &sync.Mutex{}
+
 	return mes
 }
 
@@ -23,8 +27,7 @@ func NewMessageHandler(net *Network) *MessageHandler {
 * Messagehandler for a listner. Handles all messages in a switch and takes according actions.
  */
 func (this *MessageHandler) handleMessage(channel chan []byte, me *Contact, network *Network) {
-	//this.network.mtx.Lock()
-	//defer this.network.mtx.Unlock()
+
 	data := <-channel
 	message := &protobuf.KademliaMessage{}
 	err := proto.Unmarshal(data, message)
@@ -32,28 +35,35 @@ func (this *MessageHandler) handleMessage(channel chan []byte, me *Contact, netw
 		fmt.Println(err)
 	}
 	sender := NewContact(NewKademliaID(message.GetSenderid()), message.GetSenderAddr())
+	//this.mtx.Lock()
 	fmt.Print("\n\nListner:", me, "\nSender: ", sender, "\nMessage: ", message)
+	//this.mtx.Unlock()
 	network.UpdateRoutingtable(sender) //update routingtable on all RPCs
 	switch *message.Label {
 	case "ping":
 		response := buildMessage([]string{"pong", me.ID.String(), me.Address})
 		send(message.GetSenderAddr(), response)
 	case "pong":
+		//this.mtx.Lock()
 		network.pingResponse = true
+		//this.mtx.Unlock()
 		//pingIndex := IndexInSlice(message.GetSenderAddr(), network.pingList)
 		//network.pingList[pingIndex].Response = true
 
 	case "LookupContact":
-		//fmt.Println("\nlookup this id: ", KademliaID(sha1.Sum([]byte(*message.Lookupcontact.Id))).String())
+		fmt.Println("\nlookup this id: ", *message.Lookupcontact.Id)
 		id := NewKademliaID(*message.Lookupcontact.Id)
+		//this.mtx.Lock()
 		temp := network.rt.FindClosestContacts(id, 20) //no recursion
-
-		fmt.Println("in lookupcontact case - temp: ", temp)
+		//this.mtx.Unlock()
+		//fmt.Println("in lookupcontact case - temp: ", temp)
 		r := ""
 		for i := 0; i < len(temp); i++ {
 			r = r + temp[i].String() + "\n"
 		}
+		//this.mtx.Lock()
 		response := buildMessage([]string{"LookupContactResponse", me.ID.String(), me.Address, r})
+		//this.mtx.Unlock()
 		send(message.GetSenderAddr(), response)
 
 	case "LookupContactResponse":
@@ -64,12 +74,14 @@ func (this *MessageHandler) handleMessage(channel chan []byte, me *Contact, netw
 		}
 
 	case "LookupData":
-		fmt.Println("this is message key", message.Key)
+		//fmt.Println("this is message key", message.Key)
 		key := NewKademliaID(*(message.Key))
 		storage := network.storage.RetrieveFile(key)
 		if len(storage) > 0 { //if data found
 			if network.storage.RetrieveTimeSinceStore(key) < time.Hour*24 {
+				//this.mtx.Lock()
 				response := buildMessage([]string{"LookupDataResponse", me.ID.String(), me.Address, storage})
+				//this.mtx.Unlock()
 				send(message.GetSenderAddr(), response)
 			} else {
 				if network.storage.RetrievePin(key) == false {
@@ -77,13 +89,17 @@ func (this *MessageHandler) handleMessage(channel chan []byte, me *Contact, netw
 				}
 			}
 		} else { //return K-closest
+			//this.mtx.Lock()
 			temp := network.rt.FindClosestContacts(key, 20) //no recursion
-			fmt.Println("\nthis is temp", temp)
+			//this.mtx.Unlock()
+			//fmt.Println("\nthis is temp", temp)
 			r := ""
 			for i := 0; i < len(temp); i++ {
 				r = r + temp[i].String() + "\n"
 			}
+			//this.mtx.Lock()
 			response := buildMessage([]string{"LookupContactResponse", me.ID.String(), me.Address, r})
+			//this.mtx.Unlock()
 			send(message.GetSenderAddr(), response)
 		}
 	case "LookupDataResponse":
@@ -100,7 +116,7 @@ func (this *MessageHandler) handleMessage(channel chan []byte, me *Contact, netw
 	case "Pin":
 		key := NewKademliaID(*(message.Key))
 		network.storage.Pin(key)
-		fmt.Println("AUHHUFWHKFHAEHFAJEFHJFEA")
+		//fmt.Println("AUHHUFWHKFHAEHFAJEFHJFEA")
 	case "Unpin":
 		key := NewKademliaID(*(message.Key))
 		network.storage.Unpin(key)
