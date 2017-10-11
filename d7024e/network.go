@@ -191,6 +191,16 @@ func (network *Network) SendStoreMessage(contact *Contact, key *KademliaID, valu
 	send(contact.Address, message)
 }
 
+func (network *Network) SendPinMessage(contact *Contact, key *KademliaID) {
+	message := buildMessage([]string{"Pin", network.me.ID.String(), network.me.Address, key.String()})
+	send(contact.Address, message)
+}
+
+func (network *Network) SendUnpinMessage(contact *Contact, key *KademliaID) {
+	message := buildMessage([]string{"Unpin", network.me.ID.String(), network.me.Address, key.String()})
+	send(contact.Address, message)
+}
+
 /**
 * Updates a routing table accoring to the Kademlia specs.
 * Uses network.ping
@@ -212,9 +222,9 @@ func (network *Network) UpdateRoutingtable(contact Contact) {
 			bucket.list.PushFront(contact)
 		} else {
 			lastContact := bucket.list.Back().Value.(Contact)
-			//network.mtx.Unlock()
+			network.mtx.Unlock()
 			ping := network.SendPingMessage(&lastContact)
-			//network.mtx.Lock()
+			network.mtx.Lock()
 			if !ping { //if I have no resonse add delete contact and add new
 				bucket.RemoveContact(lastContact)
 				bucket.AddContact(contact)

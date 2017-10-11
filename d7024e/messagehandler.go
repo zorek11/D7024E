@@ -94,7 +94,7 @@ func (this *MessageHandler) handleMessage(channel chan []byte, me *Contact, netw
 		senderid := *(message.Senderid)
 		network.storage.StoreFile(key, value, senderid)
 		//network.storage.RetrieveFile(key)
-		//fmt.Println(network.storage.RetrieveFile(key))
+		//fmt.Println("WOOT WOOOT + " network.storage.RetrieveFile(key))
 
 	default:
 		fmt.Println("PANIC in switch")
@@ -179,6 +179,24 @@ func buildMessage(input []string) *protobuf.KademliaMessage {
 			SenderAddr: proto.String(input[2]),
 			Key:        proto.String(input[3]),
 			Value:      proto.String(input[4]),
+		}
+		return message
+	}
+	if input[0] == "Pin" {
+		message := &protobuf.KademliaMessage{
+			Label:      proto.String(input[0]),
+			Senderid:   proto.String(input[1]),
+			SenderAddr: proto.String(input[2]),
+			Key:        proto.String(input[3]),
+		}
+		return message
+	}
+	if input[0] == "Unpin" {
+		message := &protobuf.KademliaMessage{
+			Label:      proto.String(input[0]),
+			Senderid:   proto.String(input[1]),
+			SenderAddr: proto.String(input[2]),
+			Key:        proto.String(input[3]),
 		}
 		return message
 	} else {
