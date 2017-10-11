@@ -169,7 +169,7 @@ func simulateN(n int) {
 
 		go kademlias[0].LookupData(hash.String())
 	*/
-	kademlias[0].LookupContact(contacts[n-2].ID)
+	//kademlias[0].LookupContact(contacts[n-2].ID)
 
 	for {
 
