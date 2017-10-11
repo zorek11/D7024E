@@ -82,8 +82,14 @@ func (storage *Storage) Pin(key *KademliaID) {
 	storage.pinht[*key] = true
 }
 
-func (storage *Storage) UnPin(key *KademliaID) {
+func (storage *Storage) Unpin(key *KademliaID) {
 	storage.mtx.Lock()
 	defer storage.mtx.Unlock()
 	storage.pinht[*key] = false
+}
+
+func (storage *Storage) RetrievePin(key *KademliaID) bool {
+	storage.mtx.Lock()
+	defer storage.mtx.Unlock()
+	return storage.pinht[*key]
 }

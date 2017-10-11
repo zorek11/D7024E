@@ -168,8 +168,15 @@ func (kademlia *Kademlia) LookupData(hash string) string {
 	target := NewKademliaID(hash)
 	kademlia.nt.AddMessage(target)
 	if len(kademlia.nt.storage.RetrieveFile(target)) > 0 {
-		fmt.Println("found target locally: ", kademlia.nt.storage.RetrieveFile(target))
-		return kademlia.nt.storage.RetrieveFile(target)
+		if kademlia.nt.storage.RetrieveTimeSinceStore(target) < time.Nanosecond*1 {
+			fmt.Println("found target locally: ", kademlia.nt.storage.RetrieveFile(target))
+			return kademlia.nt.storage.RetrieveFile(target)
+		} else {
+			if kademlia.nt.storage.RetrievePin(target) == false {
+				kademlia.nt.storage.DeleteFile(target)
+			}
+		}
+
 	}
 	contacted := make([]Contact, 0)
 	contacts := kademlia.nt.rt.FindClosestContacts(target, count)
@@ -239,23 +246,14 @@ func (kademlia *Kademlia) Store(data string) {
 	//TODO: LookupContact find 20 closest somehow. This kademlia doesn't know all contacts in network.
 	hashdata := []byte(data)
 	key := KademliaID(sha1.Sum(hashdata))
-<<<<<<< HEAD
-	contacts := kademlia.LookupContact(&key) //How it should work
-	//contacts := kademlia.nt.rt.FindClosestContacts(&key, count)
-
-=======
 	//contacts := kademlia.LookupContact(&target) //How it should work
 	//kademlia.nt.mtx.Lock()
 	//contacts := kademlia.nt.rt.FindClosestContacts(&key, count)
 	contacts := kademlia.LookupContact(&key)
 	//kademlia.nt.mtx.Unlock()
->>>>>>> d1c15597597687a697760b58c5216e23cac009d7
 	for j := range contacts {
 		go kademlia.nt.SendStoreMessage(&contacts[j], &key, data)
 	}
-	timer := time.NewTimer(24 * time.Hour)
-	<-timer.C
-	go kademlia.Store(data)
 }
 
 func (kademlia *Kademlia) Pin(target string) {
@@ -263,7 +261,7 @@ func (kademlia *Kademlia) Pin(target string) {
 	contacts := kademlia.LookupContact(key)
 
 	for j := range contacts {
-		go kademlia.nt.SendPinMessage(contacts[j], key)
+		go kademlia.nt.SendPinMessage(&contacts[j], key)
 	}
 }
 
@@ -272,6 +270,6 @@ func (kademlia *Kademlia) Unpin(target string) {
 	contacts := kademlia.LookupContact(key)
 
 	for j := range contacts {
-		go kademlia.nt.SendUnpinMessage(contacts[j], key)
+		go kademlia.nt.SendUnpinMessage(&contacts[j], key)
 	}
 }

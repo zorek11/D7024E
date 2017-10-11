@@ -68,11 +68,13 @@ func (this *MessageHandler) handleMessage(channel chan []byte, me *Contact, netw
 		key := NewKademliaID(*(message.Key))
 		storage := network.storage.RetrieveFile(key)
 		if len(storage) > 0 { //if data found
-			if network.storage.RetrieveTimeSinceStore(key) < time.Hour*23 {
+			if network.storage.RetrieveTimeSinceStore(key) < time.Hour*24 {
 				response := buildMessage([]string{"LookupDataResponse", me.ID.String(), me.Address, storage})
 				send(message.GetSenderAddr(), response)
 			} else {
-				network.storage.DeleteFile(key)
+				if network.storage.RetrievePin(key) == false {
+					network.storage.DeleteFile(key)
+				}
 			}
 		} else { //return K-closest
 			temp := network.rt.FindClosestContacts(key, 20) //no recursion
@@ -95,7 +97,13 @@ func (this *MessageHandler) handleMessage(channel chan []byte, me *Contact, netw
 		network.storage.StoreFile(key, value, senderid)
 		//network.storage.RetrieveFile(key)
 		//fmt.Println("WOOT WOOOT + " network.storage.RetrieveFile(key))
-
+	case "Pin":
+		key := NewKademliaID(*(message.Key))
+		network.storage.Pin(key)
+		fmt.Println("AUHHUFWHKFHAEHFAJEFHJFEA")
+	case "Unpin":
+		key := NewKademliaID(*(message.Key))
+		network.storage.Unpin(key)
 	default:
 		fmt.Println("PANIC in switch")
 
