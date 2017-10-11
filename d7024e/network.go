@@ -212,9 +212,9 @@ func (network *Network) UpdateRoutingtable(contact Contact) {
 			bucket.list.PushFront(contact)
 		} else {
 			lastContact := bucket.list.Back().Value.(Contact)
-			//network.mtx.Unlock()
+			network.mtx.Unlock()
 			ping := network.SendPingMessage(&lastContact)
-			//network.mtx.Lock()
+			network.mtx.Lock()
 			if !ping { //if I have no resonse add delete contact and add new
 				bucket.RemoveContact(lastContact)
 				bucket.AddContact(contact)

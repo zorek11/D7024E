@@ -1,7 +1,9 @@
 package d7024e
+
 import (
 	"fmt"
 )
+
 const bucketSize = 20
 
 type RoutingTable struct {
@@ -72,5 +74,4 @@ func (routingTable *RoutingTable) PrintRoutingTable() {
 		}
 	}
 
-	
 }

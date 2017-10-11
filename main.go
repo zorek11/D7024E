@@ -12,7 +12,7 @@ import (
 //export GOPATH=$HOME/go
 func main() {
 
-	simulateN(20)
+	simulateN(100)
 
 	/*
 		contact2 := kademlia.NewContact(kademlia.NewKademliaID("1FFFFFFF11111111111111111111111111111192"),
@@ -132,7 +132,7 @@ func simulateN(n int) {
 			extra += "0"
 		}
 		fmt.Println("127.0.0.1:9" + extra + iString)
-		contacts[i-1] = kademlia.NewContact(kademlia.NewKademliaID("FFFFFFFFFFF11111111111111111111111111"+extra+iString), "127.0.0.1:9"+extra+iString)
+		contacts[i-1] = kademlia.NewContact(kademlia.NewKademliaID("FFFFFFFFFFF11111111111111111111111111"+extra+iString), "127.0.0.1:7"+extra+iString)
 
 	}
 	kademlias := make([]*kademlia.Kademlia, n)
@@ -143,6 +143,7 @@ func simulateN(n int) {
 	for m := 1; m < n-1; m++ {
 		kademlias[m].GetRoutingtable().AddContact(contacts[0])
 		go kademlias[m].LookupContact(contacts[m].ID)
+		time.Sleep(200 * time.Millisecond)
 		/*
 			if m == 0 {
 				fmt.Println(contacts[m+1])
@@ -163,13 +164,14 @@ func simulateN(n int) {
 			}
 		*/
 	}
-	time.Sleep(5000 * time.Millisecond)
+	time.Sleep(2000 * time.Millisecond)
 
 	str := "aids in the face"
 	hash := kademlia.KademliaID(sha1.Sum([]byte(str)))
 	fmt.Println("Det här är ursprungshash i main: " + hash.String())
-	kademlias[n-2].Store(str)
-	kademlias[0].LookupData(hash.String())
+	go kademlias[n/10].Store(str)
+	time.Sleep(1000 * time.Millisecond)
+	kademlias[n/2].LookupData(hash.String())
 
 	//kademlias[0].LookupContact(contacts[n-2].ID)
 
