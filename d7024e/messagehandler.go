@@ -31,9 +31,9 @@ func (this *MessageHandler) handleMessage(channel chan []byte, me *Contact, netw
 	if err != nil {
 		fmt.Println(err)
 	}
-	//sender := NewContact(NewKademliaID(message.GetSenderid()), message.GetSenderAddr())
+	sender := NewContact(NewKademliaID(message.GetSenderid()), message.GetSenderAddr())
 	//fmt.Print("\n\nListner:", me, "\nSender: ", sender, "\nMessage: ", message)
-	//network.UpdateRoutingtable(sender) //update routingtable on all RPCs
+	this.network.UpdateRoutingtable(sender) //update routingtable on all RPCs
 	switch *message.Label {
 	case "ping":
 		response := buildMessage([]string{"pong", me.ID.String(), me.Address})
