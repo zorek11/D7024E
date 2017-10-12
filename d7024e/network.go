@@ -96,7 +96,6 @@ func (network *Network) GetRoutingTable() *RoutingTable {
 * Establishes a UDP-listner on an adress and handles incoming traffic in a differnt go-routine
  */
 func (network *Network) Listen(me Contact) {
-	fmt.Println("in listen")
 	messagehandler := NewMessageHandler(network)
 	Addr, err1 := net.ResolveUDPAddr("udp", me.Address)
 	Conn, err2 := net.ListenUDP("udp", Addr)
@@ -109,10 +108,10 @@ func (network *Network) Listen(me Contact) {
 	channel := make(chan []byte)
 	buf := make([]byte, 4096)
 	for {
-		go messagehandler.handleMessage(channel, &me, network)
 		n, _, err := Conn.ReadFromUDP(buf)
-		channel <- buf[0:n]
-		//fmt.Println("Connection recived: ", string(buf[0:n]), " \nfrom ", addr)
+
+		go messagehandler.handleMessage(channel, &me, network)
+		channel <- buf[:n]
 
 		if err != nil {
 			fmt.Println("Read Error: ", err)
@@ -240,7 +239,7 @@ func (network *Network) UpdateRoutingtable(contact Contact) {
 * Sends a protobuf message to the address via UDP
  */
 func send(Address string, message *protobuf.KademliaMessage) {
-	fmt.Println("send to anddress: ", Address)
+	fmt.Println("send to address: ", Address)
 	data, err := proto.Marshal(message)
 	if err != nil {
 		fmt.Println("Marshal Error: ", err)

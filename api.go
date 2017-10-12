@@ -11,15 +11,15 @@ import (
 /*
  */
 type API struct {
-	kademlia kademlia.Kademlia
+	kademlia *kademlia.Kademlia
 }
 
 /*
  */
 func NewAPI(address string, kademlia *kademlia.Kademlia) {
 	api := &API{}
-	api.kademlia = *kademlia
-	api.Listener(address)
+	api.kademlia = kademlia
+	go api.Listener(address)
 }
 
 /*
@@ -36,8 +36,8 @@ func (api *API) Listener(Address string) {
 	buf := make([]byte, 4096)
 	for {
 		n, addr, err := Conn.ReadFromUDP(buf)
-		go handleTraffic(buf, api, addr.String())
-		fmt.Println("Received ", string(buf[0:n]), " from ", addr)
+		go handleTraffic(buf[:n], api, addr.String())
+		fmt.Println("Received ", string(buf[:n]), " from ", addr)
 
 		if err != nil {
 			fmt.Println("Read Error: ", err)
@@ -49,7 +49,7 @@ func (api *API) Listener(Address string) {
  */
 func handleTraffic(traffic []byte, api *API, sender string) {
 	out := strings.Split(string(traffic), ",")
-	fmt.Println("0:", out[0], "1:", out[1])
+	fmt.Println("THIS IS WHAT YOUR ARE LOOKING FOR: "+"0:", out[0], "1:", out[1])
 	switch out[0] {
 	case "store":
 		r := kademlia.KademliaID(sha1.Sum([]byte(out[1])))
@@ -72,7 +72,6 @@ func handleTraffic(traffic []byte, api *API, sender string) {
 /*
  */
 func UDPsend(data string, address string) {
-	fmt.Println("SEND")
 	Conn, err := net.Dial("udp", address)
 	if err != nil {
 		fmt.Println("UDP-Error: ", err)

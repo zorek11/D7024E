@@ -5,7 +5,6 @@ import (
 	"time"
 )
 
-//"fmt"
 type Time struct {
 	// contains filtered or unexported fields
 }
@@ -32,7 +31,8 @@ func (storage *Storage) StoreFile(key *KademliaID, value string, publisher strin
 	storage.mtx.Lock()
 	defer storage.mtx.Unlock()
 	start := time.Now()
-	if len(storage.valueht) != 0 {
+
+	if len(storage.valueht[*key]) != 0 {
 		if storage.publisherht[*key] == publisher {
 			storage.publisherht[*key] = publisher
 			storage.valueht[*key] = value
