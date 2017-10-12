@@ -42,16 +42,16 @@ func NewKademlia(self Contact) (kademlia *Kademlia) {
 }
 
 func (kademlia *Kademlia) LookupContact(target *KademliaID) []Contact {
-	//fmt.Println("----------------------------------------------------------------------")
+	fmt.Println("----------------------------------------------------------------------")
 	contacted := make([]Contact, 0)
 
 	kademlia.nt.AddMessage(target)
 	contacts := kademlia.nt.rt.FindClosestContacts(target, count)
-	//fmt.Println(len(contacts))
+	fmt.Println(len(contacts))
 	result := make([]Contact, 20)
 	for j := 0; j < alpha; j++ {
 		if j >= len(contacts) {
-			//fmt.Println("BREAK", j)
+			fmt.Println("BREAK", j)
 			break
 		}
 		result[j] = contacts[j]
@@ -68,7 +68,7 @@ func (kademlia *Kademlia) LookupContact(target *KademliaID) []Contact {
 		t = time.Now()
 		//fmt.Println(len(kademlia.GetNetwork().GetResponse()))
 
-		if t.Sub(kademlia.start) > 1000000000 {
+		if t.Sub(kademlia.start) > 10000000000 {
 			//fmt.Println("we got the timeout")
 			//fmt.Println("\nhere is the routing table")
 			kademlia.nt.mtx.Lock()
@@ -77,30 +77,44 @@ func (kademlia *Kademlia) LookupContact(target *KademliaID) []Contact {
 			return result
 		}
 		if len(kademlia.GetNetwork().GetResponse()) > 0 {
-
-			temp := kademlia.GetNetwork().GetResponse()[0]
+			fmt.Println(kademlia.GetNetwork().GetResponse())
+			kademlia.start = time.Now()
 			tempAlpha := alpha
+			temp := kademlia.nt.GetResponse()[0]
 			result = kademlia.checkContacts(result, temp)
-			for i := 0; i < tempAlpha && i < count; i++ {
-				if i >= len(result) {
-					break
-				}
+			if len(result) < alpha {
+				tempAlpha = len(result)
+			}
+			for i := 0; i < tempAlpha && i < len(result) && tempAlpha < count; i++ {
 				if existsIn(result[i], contacted) || result[i].ID.Equals(kademlia.nt.rt.me.ID) {
-					tempAlpha++
+					if tempAlpha < len(result) {
+						tempAlpha++
+					}
+
 				} else {
 					go kademlia.nt.SendFindContactMessage(&result[i])
 					contacted = append(contacted, []Contact{result[i]}...)
 				}
+				fmt.Println("-", i, "-")
 			}
-			if tempAlpha == 20 {
-				//fmt.Println("we got the result for: ", kademlia.nt.rt.me.String())
-				//fmt.Println("\nhere is the routing table")
-				kademlia.nt.rt.PrintRoutingTable()
-				return result
-			}
-
-			//fmt.Println("\n\nthis is the result so far: ", result)
+			fmt.Println("-----------------------------", tempAlpha, "---", len(result), "---------------------------------")
 			kademlia.nt.RemoveFirstResponse()
+			if tempAlpha >= count {
+				fmt.Println("--------------------------------------we got the result for: ", kademlia.nt.rt.me.String())
+				fmt.Println("\nhere is the routing table--------------------------------------")
+				kademlia.nt.rt.PrintRoutingTable()
+				fmt.Println("and result: ", result)
+				return result
+			} else if tempAlpha >= len(result) {
+				time.Sleep(5000 * time.Millisecond)
+				if !(len(kademlia.GetNetwork().GetResponse()) > 0) {
+					fmt.Println("---------------------------len--------we got the result for: ", kademlia.nt.rt.me.String())
+					fmt.Println("\nhere is the routing table--------------------------------------")
+					kademlia.nt.rt.PrintRoutingTable()
+					fmt.Println("and result: ", result)
+					return result
+				}
+			}
 		}
 	}
 }
