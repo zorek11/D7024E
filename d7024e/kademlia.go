@@ -42,16 +42,16 @@ func NewKademlia(self Contact) (kademlia *Kademlia) {
 }
 
 func (kademlia *Kademlia) LookupContact(target *KademliaID) []Contact {
-	fmt.Println("----------------------------------------------------------------------")
+	//fmt.Println("----------------------------------------------------------------------")
 	contacted := make([]Contact, 0)
 
 	kademlia.nt.AddMessage(target)
 	contacts := kademlia.nt.rt.FindClosestContacts(target, count)
-	fmt.Println(len(contacts))
+	//fmt.Println(len(contacts))
 	result := make([]Contact, 20)
 	for j := 0; j < alpha; j++ {
 		if j >= len(contacts) {
-			fmt.Println("BREAK", j)
+			//fmt.Println("BREAK", j)
 			break
 		}
 		result[j] = contacts[j]
@@ -64,7 +64,9 @@ func (kademlia *Kademlia) LookupContact(target *KademliaID) []Contact {
 	}
 	kademlia.start = time.Now()
 	t := time.Now()
+	same := 0
 	for {
+
 		t = time.Now()
 		//fmt.Println(len(kademlia.GetNetwork().GetResponse()))
 
@@ -106,13 +108,22 @@ func (kademlia *Kademlia) LookupContact(target *KademliaID) []Contact {
 				fmt.Println("and result: ", result)
 				return result
 			} else if tempAlpha >= len(result) {
-				time.Sleep(5000 * time.Millisecond)
-				if !(len(kademlia.GetNetwork().GetResponse()) > 0) {
-					fmt.Println("---------------------------len--------we got the result for: ", kademlia.nt.rt.me.String())
+				same++
+				if same > 5 {
+					fmt.Println("--------------------------------------we got the result for: ", kademlia.nt.rt.me.String())
 					fmt.Println("\nhere is the routing table--------------------------------------")
 					kademlia.nt.rt.PrintRoutingTable()
 					fmt.Println("and result: ", result)
 					return result
+				} else if !(len(kademlia.GetNetwork().GetResponse()) > 0) {
+					time.Sleep(500 * time.Millisecond)
+					if !(len(kademlia.GetNetwork().GetResponse()) > 0) {
+						fmt.Println("---------------------------len--------we got the result for: ", kademlia.nt.rt.me.String())
+						fmt.Println("\nhere is the routing table--------------------------------------")
+						kademlia.nt.rt.PrintRoutingTable()
+						fmt.Println("and result: ", result)
+						return result
+					}
 				}
 			}
 		}

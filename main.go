@@ -227,15 +227,12 @@ func simulateN(n int) {
 		fmt.Println("Det här är ursprungshash i main: " + hash.String())
 		kademlias[n-2].Store(str)
 		kademlias[0].LookupData(hash.String())
-
-		//kademlias[0].LookupContact(contacts[n-2].ID)
 	*/
-	for {
-	}
+
 }
 
 func start100() {
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 50; i++ {
 		iString := strconv.Itoa(i)
 		var contact kademlia.Contact
 		if i < 10 {

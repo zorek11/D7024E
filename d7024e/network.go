@@ -162,15 +162,18 @@ func (network *Network) SendPingMessage(contact *Contact) bool {
 }
 
 func (network *Network) SendFindContactMessage(contact *Contact) {
-	message := &protobuf.KademliaMessage{
-		Label:      proto.String("LookupContact"),
-		Senderid:   proto.String(network.me.ID.String()),
-		SenderAddr: proto.String(network.me.Address),
-		Lookupcontact: &protobuf.KademliaMessage_LookupContact{
-			Id: proto.String(network.target.String()),
-		},
+	if len(network.me.ID.String()) > 0 {
+		message := &protobuf.KademliaMessage{
+			Label:      proto.String("LookupContact"),
+			Senderid:   proto.String(network.me.ID.String()),
+			SenderAddr: proto.String(network.me.Address),
+			Lookupcontact: &protobuf.KademliaMessage_LookupContact{
+				Id: proto.String(network.target.String()),
+			},
+		}
+		send(contact.Address, message)
 	}
-	send(contact.Address, message)
+
 }
 
 func (network *Network) SendFindDataMessage(hash string, contact *Contact) {
@@ -239,21 +242,24 @@ func (network *Network) UpdateRoutingtable(contact Contact) {
 * Sends a protobuf message to the address via UDP
  */
 func send(Address string, message *protobuf.KademliaMessage) {
-	fmt.Println("send to address: ", Address)
-	data, err := proto.Marshal(message)
-	if err != nil {
-		fmt.Println("Marshal Error: ", err)
+	if len(Address) >= 14 {
+		fmt.Println("send to anddress: ", Address)
+		data, err := proto.Marshal(message)
+		if err != nil {
+			fmt.Println("Marshal Error: ", err)
+		}
+
+		Conn, err := net.Dial("udp", Address)
+		if err != nil {
+			fmt.Println("UDP-Error: ", err)
+		}
+		defer Conn.Close()
+		_, err = Conn.Write(data)
+		if err != nil {
+			fmt.Println("Write Error: ", err)
+		}
 	}
 
-	Conn, err := net.Dial("udp", Address)
-	if err != nil {
-		fmt.Println("UDP-Error: ", err)
-	}
-	defer Conn.Close()
-	_, err = Conn.Write(data)
-	if err != nil {
-		fmt.Println("Write Error: ", err)
-	}
 }
 
 /**
