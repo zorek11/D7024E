@@ -9,9 +9,7 @@ import (
 func main() {
 
 	address := "127.0.0.1:9999"
-	// Verify that a subcommand has been provided
-	// os.Arg[0] is the main command
-	// os.Arg[1] will be the subcommand
+	// Verify that a subcommand and one argument has been provided
 	if len(os.Args) < 2 {
 		fmt.Println("Missing subcommand. The avalible commands are: \n-store, \n-cat, \n-pin, \n-unpin")
 		os.Exit(1)
@@ -26,9 +24,6 @@ func main() {
 	}
 
 	// Switch on the subcommand
-	// Parse the flags for appropriate FlagSet
-	// FlagSet.Parse() requires a set of arguments to parse as input
-	// os.Args[2:] will be all arguments starting after the subcommand at os.Args[1]
 	switch os.Args[1] {
 	case "store":
 		fmt.Printf("This is: %s with argument: %s \n", os.Args[1], os.Args[2])
@@ -73,6 +68,7 @@ func send(command string, args string, address string) {
 }
 
 /*
+* Listen for UDP
  */
 func Listener(Address string) {
 	fmt.Println("GO LISTEN")
