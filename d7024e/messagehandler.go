@@ -4,6 +4,7 @@ import (
 	"D7024E-Kademlia/protobuf"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/golang/protobuf/proto"
@@ -11,11 +12,14 @@ import (
 
 type MessageHandler struct {
 	network *Network
+	mtx     *sync.Mutex
 }
 
 func NewMessageHandler(net *Network) *MessageHandler {
 	mes := &MessageHandler{}
 	mes.network = net
+	mes.mtx = &sync.Mutex{}
+
 	return mes
 }
 
@@ -23,6 +27,8 @@ func NewMessageHandler(net *Network) *MessageHandler {
 * Messagehandler for a listner. Handles all messages in a switch and takes according actions.
  */
 func (this *MessageHandler) handleMessage(channel chan []byte, me *Contact, network *Network) {
+	//this.mtx.Lock()
+	//defer this.mtx.Unlock()
 	data := <-channel
 	message := &protobuf.KademliaMessage{}
 	err := proto.Unmarshal(data, message)
@@ -32,30 +38,35 @@ func (this *MessageHandler) handleMessage(channel chan []byte, me *Contact, netw
 	sender := NewContact(NewKademliaID(message.GetSenderid()), message.GetSenderAddr())
 	//fmt.Print("\n\nListner:", me, "\nSender: ", sender, "\nMessage: ", message)
 	this.network.UpdateRoutingtable(sender) //update routingtable on all RPCs
-	switch *message.Label {
+	switch message.GetLabel() {
 	case "ping":
 		response := buildMessage([]string{"pong", me.ID.String(), me.Address})
 		send(message.GetSenderAddr(), response)
 	case "pong":
-		network.pingResponse = true
+		network.mtx.Lock()
+		network.pingResponse = append(network.pingResponse, []*Contact{me}...)
+		network.mtx.Unlock()
 		//pingIndex := IndexInSlice(message.GetSenderAddr(), network.pingList)
 		//network.pingList[pingIndex].Response = true
 
 	case "LookupContact": //find my K-closest and return
 		if len(message.GetLookupcontact().GetId()) > 0 {
 			id := NewKademliaID(message.GetLookupcontact().GetId())
+			this.mtx.Lock()
 			temp := network.rt.FindClosestContacts(id, 20)
-
+			this.mtx.Unlock()
 			r := ""
 			for i := 0; i < len(temp); i++ {
 				r = r + temp[i].String() + "\n"
 			}
+			//fmt.Println(r)
 			response := buildMessage([]string{"LookupContactResponse", me.ID.String(), me.Address, r})
 			send(message.GetSenderAddr(), response)
 		}
 
 	case "LookupContactResponse": //on response unparse the data to lookup contact
 		s := string(message.Data)
+		//fmt.Println(s)
 		contactList := unparseContacts(s)
 		if len(contactList) > 0 {
 			network.AddResponse(contactList)

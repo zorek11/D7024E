@@ -51,7 +51,7 @@ func main() {
  */
 func send(command string, args string, address string) {
 	ServerAddr, err1 := net.ResolveUDPAddr("udp", address)
-	LocalAddr, err2 := net.ResolveUDPAddr("udp", "127.0.0.1:9988")
+	LocalAddr, err2 := net.ResolveUDPAddr("udp", "127.0.0.1:7777")
 	Conn, err3 := net.DialUDP("udp", LocalAddr, ServerAddr)
 	if err1 != nil || err2 != nil || err3 != nil {
 		fmt.Println("UDP-Error: ", err1, err2, err3)
