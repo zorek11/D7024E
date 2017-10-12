@@ -37,7 +37,7 @@ func (api *API) Listener(Address string) {
 	for {
 		n, addr, err := Conn.ReadFromUDP(buf)
 		go handleTraffic(buf[:n], api, addr.String())
-		fmt.Println("Received ", string(buf[:n]), " from ", addr)
+		//fmt.Println("Received ", string(buf[:n]), " from ", addr)
 
 		if err != nil {
 			fmt.Println("Read Error: ", err)
@@ -49,11 +49,10 @@ func (api *API) Listener(Address string) {
  */
 func handleTraffic(traffic []byte, api *API, sender string) {
 	out := strings.Split(string(traffic), ",")
-	fmt.Println("THIS IS WHAT YOUR ARE LOOKING FOR: "+"0:", out[0], "1:", out[1])
 	switch out[0] {
 	case "store":
 		r := kademlia.KademliaID(sha1.Sum([]byte(out[1])))
-		api.kademlia.Store(out[1])
+		go api.kademlia.Store(out[1])
 		UDPsend(r.String(), sender)
 	case "cat":
 		r := api.kademlia.LookupData(out[1])

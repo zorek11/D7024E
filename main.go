@@ -185,12 +185,12 @@ func simulateN(n int) {
 				}
 			}
 		*/
-		fmt.Println(numbers)
+		//fmt.Println(numbers)
 		extra := ""
 		for k := 0; k < 3-numbers; k++ {
 			extra += "0"
 		}
-		fmt.Println("127.0.0.1:9" + extra + iString)
+		//fmt.Println("127.0.0.1:9" + extra + iString)
 		contacts[i-1] = kademlia.NewContact(kademlia.NewKademliaID("FFFFFFFFFFF11111111111111111111111111"+extra+iString), "127.0.0.1:6"+extra+iString)
 
 	}
@@ -226,12 +226,13 @@ func simulateN(n int) {
 
 	time.Sleep(5000 * time.Millisecond)
 
-	str := "aids in the face"
+	str := "testfrommain"
 	hash := kademlia.KademliaID(sha1.Sum([]byte(str)))
 	fmt.Println("Det här är ursprungshash i main: " + hash.String())
 	kademlias[0].Store(str)
 	time.Sleep(5000 * time.Millisecond)
 	kademlias[n/2].LookupData(hash.String())
+	NewAPI("127.0.0.1:9999", kademlias[0])
 
 }
 

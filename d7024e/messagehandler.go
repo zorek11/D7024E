@@ -23,8 +23,6 @@ func NewMessageHandler(net *Network) *MessageHandler {
 * Messagehandler for a listner. Handles all messages in a switch and takes according actions.
  */
 func (this *MessageHandler) handleMessage(channel chan []byte, me *Contact, network *Network) {
-	//this.network.mtx.Lock()
-	//defer this.network.mtx.Unlock()
 	data := <-channel
 	message := &protobuf.KademliaMessage{}
 	err := proto.Unmarshal(data, message)
@@ -43,33 +41,27 @@ func (this *MessageHandler) handleMessage(channel chan []byte, me *Contact, netw
 		//pingIndex := IndexInSlice(message.GetSenderAddr(), network.pingList)
 		//network.pingList[pingIndex].Response = true
 
-	case "LookupContact":
-
+	case "LookupContact": //find my K-closest and return
 		if len(message.GetLookupcontact().GetId()) > 0 {
-			fmt.Println("\nlookup this id: ", message.GetLookupcontact().GetId())
 			id := NewKademliaID(message.GetLookupcontact().GetId())
-			temp := network.rt.FindClosestContacts(id, 20) //no recursion
+			temp := network.rt.FindClosestContacts(id, 20)
 
-			fmt.Println("in lookupcontact case - temp: ", temp)
 			r := ""
 			for i := 0; i < len(temp); i++ {
 				r = r + temp[i].String() + "\n"
 			}
 			response := buildMessage([]string{"LookupContactResponse", me.ID.String(), me.Address, r})
-			//if len(message.GetSenderAddr()) > 0 {
 			send(message.GetSenderAddr(), response)
-			//}
 		}
 
-	case "LookupContactResponse":
+	case "LookupContactResponse": //on response unparse the data to lookup contact
 		s := string(message.Data)
 		contactList := unparseContacts(s)
 		if len(contactList) > 0 {
 			network.AddResponse(contactList)
 		}
 
-	case "LookupData":
-		fmt.Println("this is message key", message.Key)
+	case "LookupData": //
 		key := NewKademliaID(*(message.Key))
 		storage := network.storage.RetrieveFile(key)
 		if len(storage) > 0 { //if data found
@@ -82,8 +74,8 @@ func (this *MessageHandler) handleMessage(channel chan []byte, me *Contact, netw
 				}
 			}
 		} else { //return K-closest
-			temp := network.rt.FindClosestContacts(key, 20) //no recursion
-			fmt.Println("\nthis is temp", temp)
+			temp := network.rt.FindClosestContacts(key, 20)
+
 			r := ""
 			for i := 0; i < len(temp); i++ {
 				r = r + temp[i].String() + "\n"
@@ -100,13 +92,11 @@ func (this *MessageHandler) handleMessage(channel chan []byte, me *Contact, netw
 		value := message.GetValue()
 		network.storage.StoreFile(key, value, message.GetSenderid())
 		//network.storage.RetrieveFile(key)
-		fmt.Println("Key and value in msghandler: ", key, "::", value)
 		time.Sleep(time.Second * 2)
-		fmt.Println("Retrived storage:" + network.storage.RetrieveFile(key))
+
 	case "Pin":
 		key := NewKademliaID(*(message.Key))
 		network.storage.Pin(key)
-		fmt.Println("AUHHUFWHKFHAEHFAJEFHJFEA")
 	case "Unpin":
 		key := NewKademliaID(*(message.Key))
 		network.storage.Unpin(key)

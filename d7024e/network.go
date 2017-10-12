@@ -123,7 +123,7 @@ func (network *Network) Listen(me Contact) {
 * Sends a ping message and waits for timeout.
  */
 func (network *Network) SendPingMessage(contact *Contact) bool {
-	fmt.Println("PING")
+	//fmt.Println("PING")
 	//build and send ping message
 	//make sure to send ping in order and wait for response.
 	/*pingIndex := IndexInSlice(contact.Address, network.pingList)
@@ -152,10 +152,10 @@ func (network *Network) SendPingMessage(contact *Contact) bool {
 	}
 	pingIndex = IndexInSlice(contact.Address, network.pingList)
 	*/if network.pingResponse {
-		fmt.Println("\nContact alive:", contact.Address)
+		//fmt.Println("\nContact alive:", contact.Address)
 		return true
 	} else {
-		fmt.Println("\nContact dead:", contact.Address)
+		//fmt.Println("\nContact dead:", contact.Address)
 		return false
 	}
 
@@ -243,7 +243,7 @@ func (network *Network) UpdateRoutingtable(contact Contact) {
  */
 func send(Address string, message *protobuf.KademliaMessage) {
 	if len(Address) >= 14 {
-		fmt.Println("send to anddress: ", Address)
+		//fmt.Println("send to anddress: ", Address)
 		data, err := proto.Marshal(message)
 		if err != nil {
 			fmt.Println("Marshal Error: ", err)
