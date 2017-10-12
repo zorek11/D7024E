@@ -2,7 +2,6 @@ package main
 
 import (
 	kademlia "D7024E-Kademlia/d7024e"
-	"crypto/sha1"
 	"fmt"
 	"math"
 	"strconv"
@@ -199,10 +198,10 @@ func simulateN(n int) {
 		kademlias[l] = kademlia.NewKademlia(contacts[l])
 		go kademlias[l].GetNetwork().Listen(contacts[l])
 	}
-	for m := 1; m < n-1; m++ {
-		kademlias[m].GetRoutingtable().AddContact(contacts[0])
+	for m := n - 3; m > 1; m-- {
+		kademlias[m].GetRoutingtable().AddContact(contacts[n-2])
 		go kademlias[m].LookupContact(contacts[m].ID)
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(200 * time.Millisecond)
 		/*
 			if m == 0 {
 				fmt.Println(contacts[m+1])
@@ -224,15 +223,22 @@ func simulateN(n int) {
 		*/
 	}
 
-	time.Sleep(5000 * time.Millisecond)
+	/*
+		time.Sleep(5000 * time.Millisecond)
 
-	str := "testfrommain"
-	hash := kademlia.KademliaID(sha1.Sum([]byte(str)))
-	fmt.Println("Det här är ursprungshash i main: " + hash.String())
-	kademlias[0].Store(str)
-	time.Sleep(5000 * time.Millisecond)
-	kademlias[n/2].LookupData(hash.String())
+		str := "testfrommain"
+		hash := kademlia.KademliaID(sha1.Sum([]byte(str)))
+		fmt.Println("Det här är ursprungshash i main: " + hash.String())
+		kademlias[0].Store(str)
+		time.Sleep(5000 * time.Millisecond)
+		kademlias[n/2].LookupData(hash.String())
+	*/
 	NewAPI("127.0.0.1:9999", kademlias[0])
+
+	for {
+		time.Sleep(1000 * time.Millisecond)
+		fmt.Println(" Still Going ")
+	}
 
 }
 

@@ -20,7 +20,7 @@ type Network struct {
 	mtx          *sync.Mutex
 	dataFound    string
 	pingList     []Ping
-	pingResponse bool
+	pingResponse []*Contact
 	storage      Storage
 }
 
@@ -135,7 +135,6 @@ func (network *Network) SendPingMessage(contact *Contact) bool {
 	}*/
 
 	//build and send message
-	network.pingResponse = false
 	message := buildMessage([]string{"ping", network.me.ID.String(), network.me.Address})
 	send(contact.Address, message)
 
@@ -151,14 +150,28 @@ func (network *Network) SendPingMessage(contact *Contact) bool {
 		fmt.Println(network.pingList)
 	}
 	pingIndex = IndexInSlice(contact.Address, network.pingList)
-	*/if network.pingResponse {
+	*/
+	network.mtx.Lock()
+	if network.existsInPing(contact, network.pingResponse) {
 		//fmt.Println("\nContact alive:", contact.Address)
+		network.mtx.Unlock()
 		return true
 	} else {
 		//fmt.Println("\nContact dead:", contact.Address)
+		network.mtx.Unlock()
 		return false
 	}
 
+}
+
+func (network *Network) existsInPing(c *Contact, contacts []*Contact) bool {
+	for i := 0; i < len(contacts); i++ {
+		if c.ID.Equals(contacts[i].ID) {
+			contacts = append(contacts[:i], contacts[i+1:]...)
+			return true
+		}
+	}
+	return false
 }
 
 func (network *Network) SendFindContactMessage(contact *Contact) {
@@ -208,9 +221,10 @@ func (network *Network) SendUnpinMessage(contact *Contact, key *KademliaID) {
 * Uses network.ping
  */
 func (network *Network) UpdateRoutingtable(contact Contact) {
-	network.mtx.Lock()
+	//network.mtx.Lock()
 	bucket := network.rt.buckets[network.rt.getBucketIndex(contact.ID)]
 	var element *list.Element
+	bucket.mtx.Lock()
 	for e := bucket.list.Front(); e != nil; e = e.Next() {
 		nodeID := e.Value.(Contact).ID
 
@@ -218,24 +232,30 @@ func (network *Network) UpdateRoutingtable(contact Contact) {
 			element = e
 		}
 	}
+	bucket.mtx.Unlock()
 
 	if element == nil { //If the contact is not in my bucket
+		bucket.mtx.Lock()
 		if bucket.list.Len() < bucketSize { //if my bucket has empty slots
 			bucket.list.PushFront(contact)
+			bucket.mtx.Unlock()
 		} else {
 			lastContact := bucket.list.Back().Value.(Contact)
-			network.mtx.Unlock()
+			bucket.mtx.Unlock()
+			//network.mtx.Unlock()
 			ping := network.SendPingMessage(&lastContact)
-			network.mtx.Lock()
+			//network.mtx.Lock()
 			if !ping { //if I have no resonse add delete contact and add new
 				bucket.RemoveContact(lastContact)
 				bucket.AddContact(contact)
 			}
 		}
 	} else { //if I have the element move it to front
+		bucket.mtx.Lock()
 		bucket.list.MoveToFront(element)
+		bucket.mtx.Unlock()
 	}
-	network.mtx.Unlock()
+	//network.mtx.Unlock()
 }
 
 /**

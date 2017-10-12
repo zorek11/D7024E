@@ -1,6 +1,7 @@
 package d7024e
 
 import (
+	"fmt"
 	"sync"
 	"time"
 )
@@ -15,6 +16,9 @@ type Storage struct {
 	timeht      map[KademliaID]time.Time
 	pinht       map[KademliaID]bool //TODO: ADD LATER???
 	mtx         *sync.Mutex
+	start       time.Time
+	end         time.Time
+	stored      bool
 }
 
 func NewStorage() Storage {
@@ -24,19 +28,34 @@ func NewStorage() Storage {
 	storage.timeht = make(map[KademliaID]time.Time)
 	storage.pinht = make(map[KademliaID]bool)
 	storage.mtx = &sync.Mutex{}
+	storage.stored = false
 	return storage
 }
 
 func (storage *Storage) StoreFile(key *KademliaID, value string, publisher string) {
 	storage.mtx.Lock()
 	defer storage.mtx.Unlock()
-	start := time.Now()
+	storage.start = time.Now()
 
+	go storage.StoreFileHelper(key, value, publisher)
+	for {
+		storage.end = time.Now()
+		if storage.start.Sub(storage.end).Nanoseconds() > 1000000000 {
+			break
+		} else if storage.stored == true {
+			break
+		}
+	}
+	storage.stored = false
+	fmt.Println("Leaving store file")
+}
+
+func (storage *Storage) StoreFileHelper(key *KademliaID, value string, publisher string) {
 	if len(storage.valueht[*key]) != 0 {
 		if storage.publisherht[*key] == publisher {
 			storage.publisherht[*key] = publisher
 			storage.valueht[*key] = value
-			storage.timeht[*key] = start
+			storage.timeht[*key] = storage.start
 			storage.pinht[*key] = false
 		}
 	} else {
@@ -46,6 +65,7 @@ func (storage *Storage) StoreFile(key *KademliaID, value string, publisher strin
 		storage.timeht[*key] = start
 		storage.pinht[*key] = false
 	}
+	storage.stored = true
 }
 
 func (storage *Storage) DeleteFile(key *KademliaID) {
