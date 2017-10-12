@@ -44,17 +44,22 @@ func (this *MessageHandler) handleMessage(channel chan []byte, me *Contact, netw
 		//network.pingList[pingIndex].Response = true
 
 	case "LookupContact":
-		//fmt.Println("\nlookup this id: ", KademliaID(sha1.Sum([]byte(*message.Lookupcontact.Id))).String())
-		id := NewKademliaID(*message.Lookupcontact.Id)
-		temp := network.rt.FindClosestContacts(id, 20) //no recursion
 
-		fmt.Println("in lookupcontact case - temp: ", temp)
-		r := ""
-		for i := 0; i < len(temp); i++ {
-			r = r + temp[i].String() + "\n"
+		if len(message.GetLookupcontact().GetId()) > 0 {
+			fmt.Println("\nlookup this id: ", message.GetLookupcontact().GetId())
+			id := NewKademliaID(message.GetLookupcontact().GetId())
+			temp := network.rt.FindClosestContacts(id, 20) //no recursion
+
+			fmt.Println("in lookupcontact case - temp: ", temp)
+			r := ""
+			for i := 0; i < len(temp); i++ {
+				r = r + temp[i].String() + "\n"
+			}
+			response := buildMessage([]string{"LookupContactResponse", me.ID.String(), me.Address, r})
+			//if len(message.GetSenderAddr()) > 0 {
+			send(message.GetSenderAddr(), response)
+			//}
 		}
-		response := buildMessage([]string{"LookupContactResponse", me.ID.String(), me.Address, r})
-		send(message.GetSenderAddr(), response)
 
 	case "LookupContactResponse":
 		s := string(message.Data)
@@ -91,12 +96,13 @@ func (this *MessageHandler) handleMessage(channel chan []byte, me *Contact, netw
 		network.AddData(s)
 
 	case "StoreData":
-		key := NewKademliaID(*(message.Key))
-		value := *(message.Value)
-		senderid := *(message.Senderid)
-		network.storage.StoreFile(key, value, senderid)
+		key := NewKademliaID(message.GetKey())
+		value := message.GetValue()
+		network.storage.StoreFile(key, value, message.GetSenderid())
 		//network.storage.RetrieveFile(key)
-		//fmt.Println("WOOT WOOOT + " network.storage.RetrieveFile(key))
+		fmt.Println("Key and value in msghandler: ", key, "::", value)
+		time.Sleep(time.Second * 2)
+		fmt.Println("Retrived storage:" + network.storage.RetrieveFile(key))
 	case "Pin":
 		key := NewKademliaID(*(message.Key))
 		network.storage.Pin(key)
