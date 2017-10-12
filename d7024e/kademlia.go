@@ -70,7 +70,7 @@ func (kademlia *Kademlia) LookupContact(target *KademliaID) []Contact {
 		t = time.Now()
 		//fmt.Println(len(kademlia.GetNetwork().GetResponse()))
 
-		if t.Sub(kademlia.start) > 10000000000 {
+		if t.Sub(kademlia.start).Nanoseconds() > 10000000000 {
 			//fmt.Println("we got the timeout")
 			//fmt.Println("\nhere is the routing table")
 			kademlia.nt.mtx.Lock()

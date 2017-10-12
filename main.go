@@ -2,9 +2,11 @@ package main
 
 import (
 	kademlia "D7024E-Kademlia/d7024e"
+	"crypto/sha1"
 	"fmt"
 	"math"
 	"strconv"
+	"time"
 )
 
 //export GOPATH=$HOME/go
@@ -200,6 +202,7 @@ func simulateN(n int) {
 	for m := 1; m < n-1; m++ {
 		kademlias[m].GetRoutingtable().AddContact(contacts[0])
 		go kademlias[m].LookupContact(contacts[m].ID)
+		time.Sleep(100 * time.Millisecond)
 		/*
 			if m == 0 {
 				fmt.Println(contacts[m+1])
@@ -220,14 +223,14 @@ func simulateN(n int) {
 			}
 		*/
 	}
-	/*
-		time.Sleep(5000 * time.Millisecond)
 
-		str := "aids in the face"
-		hash := kademlia.KademliaID(sha1.Sum([]byte(str)))
-		fmt.Println("Det här är ursprungshash i main: " + hash.String())
-		kademlias[n/10].Store(str)
-		kademlias[n/3].LookupData(hash.String())*/
+	time.Sleep(10000 * time.Millisecond)
+
+	str := "aids in the face"
+	hash := kademlia.KademliaID(sha1.Sum([]byte(str)))
+	fmt.Println("Det här är ursprungshash i main: " + hash.String())
+	kademlias[n/10].Store(str)
+	kademlias[n/3].LookupData(hash.String())
 
 }
 
