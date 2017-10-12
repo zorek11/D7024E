@@ -191,7 +191,7 @@ func simulateN(n int) {
 			extra += "0"
 		}
 		fmt.Println("127.0.0.1:9" + extra + iString)
-		contacts[i-1] = kademlia.NewContact(kademlia.NewKademliaID("FFFFFFFFFFF11111111111111111111111111"+extra+iString), "127.0.0.1:7"+extra+iString)
+		contacts[i-1] = kademlia.NewContact(kademlia.NewKademliaID("FFFFFFFFFFF11111111111111111111111111"+extra+iString), "127.0.0.1:6"+extra+iString)
 
 	}
 	kademlias := make([]*kademlia.Kademlia, n)
@@ -224,13 +224,14 @@ func simulateN(n int) {
 		*/
 	}
 
-	time.Sleep(10000 * time.Millisecond)
+	time.Sleep(5000 * time.Millisecond)
 
 	str := "aids in the face"
 	hash := kademlia.KademliaID(sha1.Sum([]byte(str)))
 	fmt.Println("Det här är ursprungshash i main: " + hash.String())
-	kademlias[n/10].Store(str)
-	kademlias[n/3].LookupData(hash.String())
+	kademlias[0].Store(str)
+	time.Sleep(5000 * time.Millisecond)
+	kademlias[n/2].LookupData(hash.String())
 
 }
 
