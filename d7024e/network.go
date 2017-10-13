@@ -122,6 +122,9 @@ func (network *Network) Listen(me Contact) {
 	for {
 		time.Sleep(5 * time.Millisecond)
 		n, _, err := Conn.ReadFromUDP(buf)
+		if string(buf[:n]) == "KILL" {
+			break
+		}
 
 		go messagehandler.handleMessage(channel, &me, network)
 		channel <- buf[:n]
