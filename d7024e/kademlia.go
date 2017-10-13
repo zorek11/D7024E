@@ -217,7 +217,7 @@ func (kademlia *Kademlia) LookupData(hash string) string {
 		t = time.Now()
 		if len(kademlia.nt.GetData()) > 0 {
 			fmt.Println("\n we got the data: ", kademlia.nt.GetData())
-			return kademlia.nt.PopData()
+			return kademlia.nt.GetData()
 		}
 		if t.Sub(kademlia.start).Nanoseconds() > 1000000000 {
 			fmt.Println("\nwe got the timeout")
@@ -225,7 +225,7 @@ func (kademlia *Kademlia) LookupData(hash string) string {
 			//kademlia.nt.mtx.Lock()
 			kademlia.nt.rt.PrintRoutingTable()
 			//kademlia.nt.mtx.Unlock()
-			return kademlia.nt.PopData()
+			return kademlia.nt.GetData()
 		}
 		/////////////////
 		if len(kademlia.GetNetwork().GetResponse()) > 0 {
