@@ -92,6 +92,12 @@ func (network *Network) GetRoutingTable() *RoutingTable {
 	return network.rt
 }
 
+func (network *Network) ResetData() {
+	network.mtx.Lock()
+	defer network.mtx.Unlock()
+	network.dataFound = ""
+}
+
 /**
 * Establishes a UDP-listner on an adress and handles incoming traffic in a differnt go-routine
  */
@@ -108,6 +114,7 @@ func (network *Network) Listen(me Contact) {
 	channel := make(chan []byte)
 	buf := make([]byte, 4096)
 	for {
+		time.Sleep(5 * time.Millisecond)
 		n, _, err := Conn.ReadFromUDP(buf)
 
 		go messagehandler.handleMessage(channel, &me, network)
