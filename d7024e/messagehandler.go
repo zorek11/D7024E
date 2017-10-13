@@ -27,8 +27,6 @@ func NewMessageHandler(net *Network) *MessageHandler {
 * Messagehandler for a listner. Handles all messages in a switch and takes according actions.
  */
 func (this *MessageHandler) handleMessage(channel chan []byte, me *Contact, network *Network) {
-	//this.mtx.Lock()
-	//defer this.mtx.Unlock()
 	data := <-channel
 	message := &protobuf.KademliaMessage{}
 	err := proto.Unmarshal(data, message)
@@ -46,8 +44,6 @@ func (this *MessageHandler) handleMessage(channel chan []byte, me *Contact, netw
 		network.mtx.Lock()
 		network.pingResponse = append(network.pingResponse, []*Contact{me}...)
 		network.mtx.Unlock()
-		//pingIndex := IndexInSlice(message.GetSenderAddr(), network.pingList)
-		//network.pingList[pingIndex].Response = true
 
 	case "LookupContact": //find my K-closest and return
 		if len(message.GetLookupcontact().GetId()) > 0 {
@@ -143,6 +139,9 @@ func parseContacts(input []string) *protobuf.KademliaMessage {
 	return message
 }
 
+/*
+* Builds a contact from a *protobuf.KademliaMessage_LookupContact
+ */
 func buildContact(message *protobuf.KademliaMessage_LookupContact) Contact {
 	return NewContact(NewKademliaID(*message.Id), *message.Address)
 }
@@ -164,7 +163,9 @@ func buildMessage(input []string) *protobuf.KademliaMessage {
 			Label:      proto.String(input[0]),
 			Senderid:   proto.String(input[1]),
 			SenderAddr: proto.String(input[2]),
-			Data:       []byte(input[3]),
+			Lookupcontact: &protobuf.KademliaMessage_LookupContact{
+				Id: proto.String(input[3]),
+			},
 		}
 		return message
 	}
@@ -173,10 +174,10 @@ func buildMessage(input []string) *protobuf.KademliaMessage {
 			Label:      proto.String(input[0]),
 			Senderid:   proto.String(input[1]),
 			SenderAddr: proto.String(input[2]),
-			Data:       []byte(input[3]),
-			Key:        proto.String(input[4]),
+			Key:        proto.String(input[3]),
 		}
 		return message
+
 	}
 	if input[0] == "LookupContactResponse" || input[0] == "LookupDataResponse" {
 		message := &protobuf.KademliaMessage{

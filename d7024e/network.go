@@ -116,6 +116,7 @@ func (network *Network) Listen(me Contact) {
 		if err != nil {
 			fmt.Println("Read Error: ", err)
 		}
+		time.Sleep(5 * time.Millisecond) //sleep to ofload the CPU and avoid buffer-error.
 	}
 }
 
@@ -123,16 +124,6 @@ func (network *Network) Listen(me Contact) {
 * Sends a ping message and waits for timeout.
  */
 func (network *Network) SendPingMessage(contact *Contact) bool {
-	//fmt.Println("PING")
-	//build and send ping message
-	//make sure to send ping in order and wait for response.
-	/*pingIndex := IndexInSlice(contact.Address, network.pingList)
-	if pingIndex > -1 { //if address in list
-		network.pingList[pingIndex].Queue = network.pingList[pingIndex].Queue + 1
-		<-network.pingList[pingIndex].Done //wait for previous ping to finsh
-	} else {
-		network.pingList = append(network.pingList, Ping{contact.Address, false, make(chan bool, 1), 0}) //add to pingList
-	}*/
 
 	//build and send message
 	message := buildMessage([]string{"ping", network.me.ID.String(), network.me.Address})
@@ -140,17 +131,6 @@ func (network *Network) SendPingMessage(contact *Contact) bool {
 
 	//wait for timeout (2sec)
 	time.Sleep(time.Second * 2)
-
-	/*network.pingList[pingIndex].Queue = network.pingList[pingIndex].Queue - 1 //decrease queue
-	if network.pingList[pingIndex].Queue >= 0 { //if there is someone in the queue release the channel
-		network.pingList[pingIndex].Done <- true
-		fmt.Println(network.pingList)
-	} else {
-		network.pingList = append(network.pingList[:pingIndex], network.pingList[pingIndex+1:]...) //delete contact from list
-		fmt.Println(network.pingList)
-	}
-	pingIndex = IndexInSlice(contact.Address, network.pingList)
-	*/
 	network.mtx.Lock()
 	if network.existsInPing(contact, network.pingResponse) {
 		//fmt.Println("\nContact alive:", contact.Address)
@@ -164,6 +144,9 @@ func (network *Network) SendPingMessage(contact *Contact) bool {
 
 }
 
+/*
+* Checks if a contacts is in the list or not, returns bool. If the contact exists, it deletes it.
+ */
 func (network *Network) existsInPing(c *Contact, contacts []*Contact) bool {
 	for i := 0; i < len(contacts); i++ {
 		if c.ID.Equals(contacts[i].ID) {
@@ -175,30 +158,13 @@ func (network *Network) existsInPing(c *Contact, contacts []*Contact) bool {
 }
 
 func (network *Network) SendFindContactMessage(contact *Contact) {
-	if len(network.me.ID.String()) > 0 {
-		message := &protobuf.KademliaMessage{
-			Label:      proto.String("LookupContact"),
-			Senderid:   proto.String(network.me.ID.String()),
-			SenderAddr: proto.String(network.me.Address),
-			Lookupcontact: &protobuf.KademliaMessage_LookupContact{
-				Id: proto.String(network.target.String()),
-			},
-		}
-		send(contact.Address, message)
-	}
-
+	message := buildMessage([]string{"LookupContact", network.me.ID.String(), network.me.Address, network.target.String()})
+	send(contact.Address, message)
 }
 
 func (network *Network) SendFindDataMessage(hash string, contact *Contact) {
-
-	message := &protobuf.KademliaMessage{
-		Label:      proto.String("LookupData"),
-		Senderid:   proto.String(network.me.ID.String()),
-		SenderAddr: proto.String(network.me.Address),
-		Key:        proto.String(hash),
-	}
+	message := buildMessage([]string{"LookupData", network.me.ID.String(), network.me.Address, hash})
 	send(contact.Address, message)
-
 }
 
 func (network *Network) SendStoreMessage(contact *Contact, key *KademliaID, value string) {
@@ -255,7 +221,6 @@ func (network *Network) UpdateRoutingtable(contact Contact) {
 		bucket.list.MoveToFront(element)
 		bucket.mtx.Unlock()
 	}
-	//network.mtx.Unlock()
 }
 
 /**

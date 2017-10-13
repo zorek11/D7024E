@@ -2,7 +2,6 @@ package main
 
 import (
 	kademlia "D7024E-Kademlia/d7024e"
-	"crypto/sha1"
 	"fmt"
 	"net"
 	"strings"
@@ -51,9 +50,9 @@ func handleTraffic(traffic []byte, api *API, sender string) {
 	out := strings.Split(string(traffic), ",")
 	switch out[0] {
 	case "store":
-		r := kademlia.KademliaID(sha1.Sum([]byte(out[1])))
-		go api.kademlia.Store(out[1])
-		UDPsend(r.String(), sender)
+		//r := kademlia.KademliaID(sha1.Sum([]byte(out[1])))
+		key := api.kademlia.Store(out[1])
+		UDPsend(key, sender)
 	case "cat":
 		r := api.kademlia.LookupData(out[1])
 		if r == "" {
