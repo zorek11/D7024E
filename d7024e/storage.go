@@ -71,10 +71,12 @@ func (storage *Storage) StoreFileHelper(key *KademliaID, value string, publisher
 func (storage *Storage) DeleteFile(key *KademliaID) {
 	storage.mtx.Lock()
 	defer storage.mtx.Unlock()
-	delete(storage.valueht, *key)
-	delete(storage.publisherht, *key)
-	delete(storage.timeht, *key)
-	//delete(storage.pinht, *key)
+	if !storage.pinht[*key] {
+		delete(storage.valueht, *key)
+		delete(storage.publisherht, *key)
+		delete(storage.timeht, *key)
+		delete(storage.pinht, *key)
+	}
 }
 
 func (storage *Storage) RetrieveFile(key *KademliaID) string {

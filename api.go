@@ -52,7 +52,7 @@ func handleTraffic(traffic []byte, api *API, sender string) {
 	switch out[0] {
 	case "store":
 		r := kademlia.KademliaID(sha1.Sum([]byte(out[1])))
-		api.kademlia.Store(out[1])
+		go api.kademlia.Store(out[1])
 		UDPsend(r.String(), sender)
 	case "cat":
 		r := api.kademlia.LookupData(out[1])
