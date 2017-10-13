@@ -30,7 +30,7 @@ func simulateN(n int) {
 			extra += "0"
 		}
 		contacts[i-1] = kademlia.NewContact(kademlia.NewKademliaID("FFFFFFFFFFF11111111111111111111111111"+extra+iString), "127.0.0.1:6"+extra+iString)
-
+		contacts[i-1].CalcDistance(kademlia.NewKademliaID("FFFFFFFFFFF11111111111111111111111111005"))
 	}
 	kademlias := make([]*kademlia.Kademlia, n)
 	for l := 0; l < n; l++ {
@@ -42,13 +42,23 @@ func simulateN(n int) {
 		go kademlias[m].LookupContact(contacts[m].ID)
 		time.Sleep(100 * time.Millisecond)
 	}
+	var cc kademlia.ContactCandidates
+	cc.Append(contacts[:len(contacts)-1])
+	cc.Sort()
+
+	first := kademlias[10].LookupContact(kademlia.NewKademliaID("FFFFFFFFFFF11111111111111111111111111005"))
+
+	//second := kademlias[5].LookupContact(contacts[10].ID)
+
+	fmt.Println("first \n", first, "\n")
+	fmt.Println("second \n", cc.GetContacts(20))
 
 	time.Sleep(3000 * time.Millisecond)
 
 	NewAPI("127.0.0.1:9999", kademlias[0])
 	for {
 		time.Sleep(1000 * time.Millisecond)
-		fmt.Println("still alive")
+		//fmt.Println("still alive")
 	}
 
 }
