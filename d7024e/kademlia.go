@@ -102,20 +102,20 @@ func (kademlia *Kademlia) LookupContact(target *KademliaID) []Contact {
 			}
 			kademlia.nt.RemoveFirstResponse()
 			if tempAlpha >= count {
-				fmt.Println("--------------------------------------we got the result for: ", kademlia.nt.rt.me.String())
-				fmt.Println("and result: ", result)
+				//fmt.Println("--------------------------------------we got the result for: ", kademlia.nt.rt.me.String())
+				//fmt.Println("and result: ", result)
 				return result
 			} else if tempAlpha >= len(result) {
 				same++
 				if same > 5 {
-					fmt.Println("--------------------------------------we got the result for: ", kademlia.nt.rt.me.String())
-					fmt.Println("and result: ", result)
+					//fmt.Println("--------------------------------------we got the result for: ", kademlia.nt.rt.me.String())
+					//fmt.Println("and result: ", result)
 					return result
 				} else if !(len(kademlia.GetNetwork().GetResponse()) > 0) {
 					time.Sleep(200 * time.Millisecond)
 					if !(len(kademlia.GetNetwork().GetResponse()) > 0) {
-						fmt.Println("---------------------------len--------we got the result for: ", kademlia.nt.rt.me.String())
-						fmt.Println("and result: ", result)
+						//fmt.Println("---------------------------len--------we got the result for: ", kademlia.nt.rt.me.String())
+						//fmt.Println("and result: ", result)
 						return result
 					}
 				}

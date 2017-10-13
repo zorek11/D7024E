@@ -1,1 +1,1 @@
-This is the content of my other file, which is not the same as the first. 
+This is the content of my other file which is not the same as the first
