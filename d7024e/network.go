@@ -98,6 +98,12 @@ func (network *Network) ResetData() {
 	network.dataFound = ""
 }
 
+func (network *Network) PopData() string {
+	temp := network.dataFound
+	network.dataFound = ""
+	return temp
+}
+
 /**
 * Establishes a UDP-listner on an adress and handles incoming traffic in a differnt go-routine
  */

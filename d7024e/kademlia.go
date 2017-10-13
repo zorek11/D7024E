@@ -183,10 +183,11 @@ func (kademlia *Kademlia) checkDuplicates(contacts []Contact, temp []Contact) {
 func (kademlia *Kademlia) LookupData(hash string) string {
 	fmt.Println("--------------------------------LOOKUP DATA--------------------------------------")
 	//fmt.Println("----------------------------------------------------------------------")
+	kademlia.nt.ResetData()
 	contacted := make([]Contact, 0)
 	target := NewKademliaID(hash)
 	kademlia.nt.AddMessage(target)
-	defer kademlia.nt.ResetData()
+
 	if len(kademlia.nt.storage.RetrieveFile(target)) > 0 { //check in my storage and purge if overdue
 		if kademlia.nt.storage.RetrieveTimeSinceStore(target) < time.Hour*24 {
 			fmt.Println("found target locally: ", kademlia.nt.storage.RetrieveFile(target))
@@ -216,7 +217,7 @@ func (kademlia *Kademlia) LookupData(hash string) string {
 		t = time.Now()
 		if len(kademlia.nt.GetData()) > 0 {
 			fmt.Println("\n we got the data: ", kademlia.nt.GetData())
-			return kademlia.nt.GetData()
+			return kademlia.nt.PopData()
 		}
 		if t.Sub(kademlia.start).Nanoseconds() > 1000000000 {
 			fmt.Println("\nwe got the timeout")
@@ -224,7 +225,7 @@ func (kademlia *Kademlia) LookupData(hash string) string {
 			//kademlia.nt.mtx.Lock()
 			kademlia.nt.rt.PrintRoutingTable()
 			//kademlia.nt.mtx.Unlock()
-			return kademlia.nt.GetData()
+			return kademlia.nt.PopData()
 		}
 		/////////////////
 		if len(kademlia.GetNetwork().GetResponse()) > 0 {
@@ -327,6 +328,11 @@ func (kademlia *Kademlia) Store(data string) {
 	for j := range contacts {
 		go kademlia.nt.SendStoreMessage(&contacts[j], &key, data)
 	}
+
+	//timer := time.NewTimer(time.Second * 10)
+	//<-timer.C
+	//fmt.Println("Timer expired")
+	//go kademlia.Store(data)
 }
 
 func (kademlia *Kademlia) Pin(target string) {

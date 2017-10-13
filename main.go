@@ -43,7 +43,7 @@ func simulateN(n int) {
 		time.Sleep(100 * time.Millisecond)
 	}
 
-	time.Sleep(5000 * time.Millisecond)
+	time.Sleep(3000 * time.Millisecond)
 
 	NewAPI("127.0.0.1:9999", kademlias[0])
 	for {
