@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
+	"log"
 	"net"
 	"os"
 )
@@ -26,18 +28,23 @@ func main() {
 	// Switch on the subcommand
 	switch os.Args[1] {
 	case "store":
-		fmt.Printf("This is: %s with argument: %s \n", os.Args[1], os.Args[2])
-		send(os.Args[1], os.Args[2], address)
+		content, err := ioutil.ReadFile(os.Args[2])
+		if err != nil {
+			log.Fatal(err)
+		}
+		inputstring := string(content)
+		//fmt.Printf("This is: %s with argument: %s \n", os.Args[1], inputstring)
+		send(os.Args[1], inputstring, address)
 	case "cat":
-		fmt.Printf("This is: %s with argument: %s \n", os.Args[1], os.Args[2])
+		//fmt.Printf("This is: %s with argument: %s \n", os.Args[1], os.Args[2])
 		send(os.Args[1], os.Args[2], address)
 
 	case "pin":
-		fmt.Printf("This is: %s with argument: %s \n", os.Args[1], os.Args[2])
+		//fmt.Printf("This is: %s with argument: %s \n", os.Args[1], os.Args[2])
 		send(os.Args[1], os.Args[2], address)
 
 	case "unpin":
-		fmt.Printf("This is: %s with argument: %s \n", os.Args[1], os.Args[2])
+		//fmt.Printf("This is: %s with argument: %s \n", os.Args[1], os.Args[2])
 		send(os.Args[1], os.Args[2], address)
 
 	default:
@@ -82,8 +89,9 @@ func Listener(Address string) {
 
 	buf := make([]byte, 4096)
 	for {
-		n, addr, err := Conn.ReadFromUDP(buf)
-		fmt.Println("Received ", string(buf[0:n]), " from ", addr)
+		n, _, err := Conn.ReadFromUDP(buf)
+		//fmt.Println("Received ", string(buf[0:n]), " from ", addr)
+		fmt.Println(string(buf[:n]))
 
 		if err != nil {
 			fmt.Println("Read Error: ", err)
@@ -93,4 +101,4 @@ func Listener(Address string) {
 }
 
 //go build dfs.go
-//sudo cp dfs /usr/local/bin
+//
